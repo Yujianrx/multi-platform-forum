@@ -7,7 +7,14 @@ import {
   PASSWORD_MIN_LENGTH,
   PASSWORD_MAX_LENGTH,
 } from '../../server/account-policy';
-import { useState } from 'react';
+import { useState, lazy } from 'react';
+import { useMobile } from '../mobile/useMobile';
+const MobileProfileHeader = lazy(() =>
+  import('../mobile/MobileProfile').then((m) => ({ default: m.MobileProfileHeader })),
+);
+const MobileProfileTabs = lazy(() =>
+  import('../mobile/MobileProfile').then((m) => ({ default: m.MobileProfileTabs })),
+);
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import {
   Plus,
@@ -25,9 +32,12 @@ import { useApi, send, date } from '../api';
 import { useApp } from '../context';
 import { Avatar, ContentCard, Loading, ErrorState, Empty, Pagination, Field } from '../components';
 export function Profile() {
+  const mobile = useMobile();
   const { user, toast, refresh } = useApp(),
     [params, setParams] = useSearchParams(),
-    tab = params.get('tab') || 'all',
+    tab =
+      (mobile && params.get('tab') === 'menu' ? 'published' : params.get('tab')) ||
+      (mobile ? 'published' : 'all'),
     page = Number(params.get('page') || 1),
     [busy, setBusy] = useState(false),
     [name, setName] = useState(user.name),
@@ -38,6 +48,7 @@ export function Profile() {
     ['settings', 'api', 'honors'].includes(tab) ? null : `/contents?mine=${tab}&page=${page}`,
   );
   const tabs: any[] = [
+    ...(mobile ? [['published', '我的发布', FileText]] : []),
     ['all', '我的发布', FileText],
     ['honors', '我的贡献', ShieldCheck],
     ['draft', '草稿箱', FileText],
@@ -65,44 +76,55 @@ export function Profile() {
   }
   return (
     <div className="profile-page">
-      <div className="profile-hero">
-        <Avatar name={user.name} userId={user.id} version={user.avatar_version} />
-        <div>
-          <span className="eyebrow">MY CREATIVE SPACE</span>
-          <h1>{user.name} 的共创空间</h1>
-          <p>{user.bio || '把每一次探索，变成值得留下的分享。'}</p>
-        </div>
-        <Link className="button" to="/editor">
-          <Plus size={17} />
-          发布新内容
-        </Link>
-      </div>
-      <div className="profile-layout">
-        <aside className="profile-menu panel">
-          {tabs.map(([key, label, Icon]) => (
-            <button
-              className={key === tab ? 'active' : ''}
-              key={key}
-              onClick={() => setParams({ tab: key })}
-            >
-              <Icon size={18} />
-              {label}
-            </button>
-          ))}
-          <Link to="/notifications">
-            <Bell size={18} />
-            消息通知
+      {mobile ? (
+        !['settings', 'api', 'honors'].includes(tab) && <MobileProfileHeader />
+      ) : (
+        <div className="profile-hero">
+          <Avatar name={user.name} userId={user.id} version={user.avatar_version} />
+          <div>
+            <span className="eyebrow">MY CREATIVE SPACE</span>
+            <h1>{user.name} 的共创空间</h1>
+            <p>{user.bio || '把每一次探索，变成值得留下的分享。'}</p>
+          </div>
+          <Link className="button" to="/editor">
+            <Plus size={17} />
+            发布新内容
           </Link>
-          {user.role !== 'member' && (
-            <Link to="/admin">
-              <ShieldCheck size={18} />
-              管理后台
+        </div>
+      )}
+      <div className="profile-layout">
+        {mobile ? (
+          <MobileProfileTabs tab={tab} change={(t) => setParams({ tab: t })} />
+        ) : (
+          <aside className="profile-menu panel">
+            {tabs.map(([key, label, Icon]) => (
+              <button
+                className={key === tab ? 'active' : ''}
+                key={key}
+                onClick={() => setParams({ tab: key })}
+              >
+                <Icon size={18} />
+                {label}
+              </button>
+            ))}
+            <Link to="/notifications">
+              <Bell size={18} />
+              消息通知
             </Link>
-          )}
-        </aside>
+            {user.role !== 'member' && (
+              <Link to="/admin">
+                <ShieldCheck size={18} />
+                管理后台
+              </Link>
+            )}
+          </aside>
+        )}
         <section className="profile-content">
           {tab === 'honors' ? (
-            <PersonalHonors />
+            <PersonalHonors
+              key={params.get('honor') || 'ledger'}
+              initialTab={mobile && params.get('honor') === 'badges' ? 'badges' : 'ledger'}
+            />
           ) : tab === 'api' ? (
             <ApiAccess />
           ) : tab === 'settings' ? (

@@ -43,7 +43,7 @@ export function HonorDialog({
     </dialog>
   );
 }
-function BadgeDetails({ badge, close }: { badge: any; close: () => void }) {
+export function BadgeDetails({ badge, close }: { badge: any; close: () => void }) {
   return (
     <HonorDialog title={badge.name} close={close}>
       <div className="honor-badge-detail">
@@ -192,8 +192,8 @@ export function HonorRules() {
     </div>
   );
 }
-export function PersonalHonors() {
-  const [tab, setTab] = useState('ledger'),
+export function PersonalHonors({ initialTab = 'ledger' }: { initialTab?: string } = {}) {
+  const [tab, setTab] = useState(initialTab),
     [page, setPage] = useState(1),
     [category, setCategory] = useState(''),
     [kind, setKind] = useState('');

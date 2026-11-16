@@ -201,7 +201,7 @@ test('技能包上传、版本发布和真实下载可用', async ({ page, brows
 test('手机首页、发布表单、详情和排行榜无横向溢出', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await login(page, 'lin.xia');
-  await expect(page.locator('.mobile-nav')).toBeVisible();
+  await expect(page.locator('.m-bottom-nav')).toBeVisible();
   await noOverflow(page);
   await page.screenshot({ path: 'outputs/首页-手机.png', fullPage: true });
   await page.goto('/rankings');
@@ -215,7 +215,7 @@ test('手机首页、发布表单、详情和排行榜无横向溢出', async ({
   await page.getByLabel('标题 *', { exact: true }).fill('手机端草稿测试');
   await page.screenshot({ path: 'outputs/发布表单-手机.png', fullPage: true });
   await page.goto('/explore?type=project');
-  await page.locator('.content-card h3 a').first().click();
+  await page.locator('.m-card-open').first().click();
   await expect(page.locator('.article h1')).toBeVisible();
   await noOverflow(page);
 });

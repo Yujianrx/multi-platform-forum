@@ -1,5 +1,7 @@
 import {
   useState,
+  lazy,
+  Suspense,
   useId,
   cloneElement,
   isValidElement,
@@ -26,6 +28,8 @@ import remarkGfm from 'remark-gfm';
 import { remarkRichText } from './remark-rich-text';
 import { typeLabels, statusLabels, date } from './api';
 import { isSticker } from './stickers';
+import { useMobile } from './mobile/useMobile';
+const MobileContentCard = lazy(() => import('./mobile/MobileContentCard'));
 export const typeIcons: any = {
   experience: Sparkles,
   project: Code2,
@@ -176,6 +180,13 @@ export function Artwork({ type, compact = false }: { type: string; compact?: boo
   );
 }
 export function ContentCard({ item }: { item: any }) {
+  const mobile = useMobile();
+  if (mobile)
+    return (
+      <Suspense fallback={null}>
+        <MobileContentCard item={item} />
+      </Suspense>
+    );
   const Icon = typeIcons[item.type] || Sparkles;
   const href =
     item.type === 'discussion'
@@ -187,7 +198,7 @@ export function ContentCard({ item }: { item: any }) {
         {item.cover_id ? (
           <img
             loading="lazy"
-                  decoding="async"
+            decoding="async"
             src={`/api/files/${item.cover_id}?revision=${item.revision_id}`}
             alt=""
             onError={(e) => {

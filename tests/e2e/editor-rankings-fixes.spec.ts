@@ -76,7 +76,6 @@ test('首页独立人气榜显示真实排行，切换浏览和周期，空状�
   await expect(board.locator('.rank-meta small:last-child')).toHaveText(
     views.items.map((x: any) => x.score + ' 次浏览'),
   );
-  await page.setViewportSize({ width: 390, height: 844 });
   await board.scrollIntoViewIfNeeded();
   await board.screenshot({ path: 'outputs/首页-独立人气榜.png' });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(
@@ -84,6 +83,12 @@ test('首页独立人气榜显示真实排行，切换浏览和周期，空状�
   );
   await board.getByRole('link', { name: '查看完整浏览榜 →' }).click();
   await expect(page).toHaveURL(/metric=views&period=all/);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(page.getByRole('button', { name: '浏览榜', exact: true })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(
+    true,
+  );
+  await page.setViewportSize({ width: 1440, height: 1000 });
   await page.route('**/api/rankings?*', (route) =>
     route.fulfill({ json: { items: [], total: 0 } }),
   );

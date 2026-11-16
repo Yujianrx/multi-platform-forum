@@ -1,18 +1,16 @@
-import { useState, useEffect, useCallback, Component, Suspense, lazy, type ReactNode } from 'react';
-import { Link, NavLink, Route, Routes, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import {
-  Sparkles,
-  Search,
-  Plus,
-  Bell,
-  LogOut,
-  Home as HomeIcon,
-  Compass,
-  UserRound,
-  ShieldCheck,
-  CheckCircle2,
-  X,
-} from './icons';
+  useState,
+  useEffect,
+  useLayoutEffect,
+  useCallback,
+  Component,
+  Suspense,
+  lazy,
+  type ReactNode,
+} from 'react';
+import { useMobile } from './mobile/useMobile';
+import { Link, NavLink, Route, Routes, Navigate, useNavigate, useLocation } from 'react-router-dom';
+import { Sparkles, Search, Plus, Bell, LogOut, ShieldCheck, CheckCircle2, X } from './icons';
 import { api, send, setCsrf, type User } from './api';
 import { BrandIdentity } from './BrandIdentity';
 import { AppContext } from './context';
@@ -26,6 +24,12 @@ import { Profile, Notifications, Author } from './pages/Profile';
 import { Forum, ForumEditor, ForumTopic } from './pages/Forum';
 import { HonorLeaderboard } from './Honors';
 const Admin = lazy(() => import('./pages/Admin').then((m) => ({ default: m.Admin })));
+const MobileHeader = lazy(() =>
+  import('./mobile/MobileShell').then((m) => ({ default: m.MobileHeader })),
+);
+const MobileNavigation = lazy(() =>
+  import('./mobile/MobileShell').then((m) => ({ default: m.MobileNavigation })),
+);
 class Boundary extends Component<{ children: ReactNode }, { error: boolean }> {
   state = { error: false };
   static getDerivedStateFromError() {
@@ -40,6 +44,11 @@ class Boundary extends Component<{ children: ReactNode }, { error: boolean }> {
   }
 }
 export default function App() {
+  const mobile = useMobile();
+  useLayoutEffect(() => {
+    document.documentElement.classList.toggle('mobile-app', mobile);
+    return () => document.documentElement.classList.remove('mobile-app');
+  }, [mobile]);
   const [user, setUser] = useState<User | null>(null),
     [site, setSite] = useState<any>({ name: '小鱼号AI共创社区' }),
     [loading, setLoading] = useState(true),
@@ -123,71 +132,77 @@ export default function App() {
       <a className="skip-link" href="#main">
         跳到正文
       </a>
-      <header className="site-header">
-        <div className="header-inner">
-          <Link to="/" className="brand site-brand">
-            <BrandIdentity site={site} />
-          </Link>
-          <nav className="desktop-nav" aria-label="主导航">
-            <NavLink to="/" end>
-              首页
-            </NavLink>
-            <NavLink to="/forum">讨论区</NavLink>
-            {[
-              ['experience', '经验分享'],
-              ['project', '开发项目'],
-              ['skill', '技能包'],
-              ['prompt', '提示词'],
-            ].map(([type, title]) => {
-              const selected =
-                location.pathname === '/explore' &&
-                new URLSearchParams(location.search).get('type') === type;
-              return (
-                <Link
-                  key={type}
-                  to={'/explore?type=' + type}
-                  className={selected ? 'active' : ''}
-                  aria-current={selected ? 'page' : undefined}
-                >
-                  {title}
-                </Link>
-              );
-            })}
-          </nav>
-          <form
-            className="header-search"
-            role="search"
-            onSubmit={(e) => {
-              e.preventDefault();
-              navigate('/explore?q=' + encodeURIComponent(query));
-            }}
-          >
-            <Search size={17} />
-            <input
-              aria-label="全站搜索"
-              placeholder="发现好灵感…"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-            />
-            <kbd>↵</kbd>
-          </form>
-          <Link className="button publish" to="/editor">
-            <Plus size={17} />
-            发布
-          </Link>
-          <Link
-            className="icon-button notification-button"
-            to="/notifications"
-            aria-label={`消息，${unread} 条未读`}
-          >
-            <Bell size={20} />
-            {unread > 0 && <i />}
-          </Link>
-          <Link className="profile-link" to="/me" aria-label="个人中心">
-            <Avatar name={user.name} userId={user.id} version={user.avatar_version} />
-          </Link>
-        </div>
-      </header>
+      {mobile ? (
+        <Suspense fallback={null}>
+          <MobileHeader />
+        </Suspense>
+      ) : (
+        <header className="site-header">
+          <div className="header-inner">
+            <Link to="/" className="brand site-brand">
+              <BrandIdentity site={site} />
+            </Link>
+            <nav className="desktop-nav" aria-label="主导航">
+              <NavLink to="/" end>
+                首页
+              </NavLink>
+              <NavLink to="/forum">讨论区</NavLink>
+              {[
+                ['experience', '经验分享'],
+                ['project', '开发项目'],
+                ['skill', '技能包'],
+                ['prompt', '提示词'],
+              ].map(([type, title]) => {
+                const selected =
+                  location.pathname === '/explore' &&
+                  new URLSearchParams(location.search).get('type') === type;
+                return (
+                  <Link
+                    key={type}
+                    to={'/explore?type=' + type}
+                    className={selected ? 'active' : ''}
+                    aria-current={selected ? 'page' : undefined}
+                  >
+                    {title}
+                  </Link>
+                );
+              })}
+            </nav>
+            <form
+              className="header-search"
+              role="search"
+              onSubmit={(e) => {
+                e.preventDefault();
+                navigate('/explore?q=' + encodeURIComponent(query));
+              }}
+            >
+              <Search size={17} />
+              <input
+                aria-label="全站搜索"
+                placeholder="发现好灵感…"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+              />
+              <kbd>↵</kbd>
+            </form>
+            <Link className="button publish" to="/editor">
+              <Plus size={17} />
+              发布
+            </Link>
+            <Link
+              className="icon-button notification-button"
+              to="/notifications"
+              aria-label={`消息，${unread} 条未读`}
+            >
+              <Bell size={20} />
+              {unread > 0 && <i />}
+            </Link>
+            <Link className="profile-link" to="/me" aria-label="个人中心">
+              <Avatar name={user.name} userId={user.id} version={user.avatar_version} />
+            </Link>
+          </div>
+        </header>
+      )}
       <main id="main" className="main-shell">
         <Boundary key={location.pathname}>
           <Routes>
@@ -217,21 +232,42 @@ export default function App() {
           </Routes>
         </Boundary>
       </main>
-      <footer className="site-footer">
-        <span>
-          <Sparkles size={15} />
-          {site.name} · 每一份分享，都让我们更进一步。
-        </span>
-        <div>
-          {site.development && <span className="dev-pill">开发环境 · 示例内容</span>}
-          {user.role !== 'member' && (
-            <Link to="/admin">
-              <ShieldCheck size={14} />
-              管理后台
-            </Link>
-          )}
-          <button
-            onClick={async () => {
+      {!mobile && (
+        <footer className="site-footer">
+          <span>
+            <Sparkles size={15} />
+            {site.name} · 每一份分享，都让我们更进一步。
+          </span>
+          <div>
+            {site.development && <span className="dev-pill">开发环境 · 示例内容</span>}
+            {user.role !== 'member' && (
+              <Link to="/admin">
+                <ShieldCheck size={14} />
+                管理后台
+              </Link>
+            )}
+            <button
+              onClick={async () => {
+                try {
+                  await send('/auth/logout');
+                  setUser(null);
+                  setCsrf('');
+                } catch (e: any) {
+                  toast(e.message, true);
+                }
+              }}
+            >
+              <LogOut size={14} />
+              退出登录
+            </button>
+          </div>
+        </footer>
+      )}
+      {mobile && (
+        <Suspense fallback={null}>
+          <MobileNavigation
+            unread={unread}
+            logout={async () => {
               try {
                 await send('/auth/logout');
                 setUser(null);
@@ -240,34 +276,9 @@ export default function App() {
                 toast(e.message, true);
               }
             }}
-          >
-            <LogOut size={14} />
-            退出登录
-          </button>
-        </div>
-      </footer>
-      <nav className="mobile-nav" aria-label="手机导航">
-        <NavLink to="/" end>
-          <HomeIcon size={21} />
-          首页
-        </NavLink>
-        <NavLink to="/forum">
-          <Compass size={21} />
-          讨论
-        </NavLink>
-        <NavLink to="/editor">
-          <Plus size={23} />
-          发布
-        </NavLink>
-        <NavLink to="/notifications">
-          <Bell size={21} />
-          消息
-        </NavLink>
-        <NavLink to="/me">
-          <UserRound size={21} />
-          我的
-        </NavLink>
-      </nav>
+          />
+        </Suspense>
+      )}
       {notice && (
         <div
           className={`toast ${notice.error ? 'error' : ''}`}

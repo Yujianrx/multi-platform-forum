@@ -1,5 +1,7 @@
 import { HomeRankings } from '../HomeRankings';
-import { useState } from 'react';
+import { useState, lazy } from 'react';
+import { useMobile } from '../mobile/useMobile';
+const MobileHome = lazy(() => import('../mobile/MobileHome'));
 import { HomeHonors } from '../Honors';
 import { ImageCarousel } from '../ImageCarousel';
 import { Link } from 'react-router-dom';
@@ -25,6 +27,9 @@ import { useApp } from '../context';
 import { ContentCard, Loading, ErrorState, Empty } from '../components';
 import { ForumPreview } from './Forum';
 export function Home() {
+  return useMobile() ? <MobileHome /> : <DesktopHome />;
+}
+function DesktopHome() {
   const { user } = useApp();
   const home = useApi('/home'),
     tax = useApi('/taxonomy'),

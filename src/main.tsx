@@ -11,5 +11,6 @@ import './admin-type.css';
 import './account-experience.css';
 import './honors.css';
 import './editing-experience.css';
+import './mobile/mobile.css';
 const router = createBrowserRouter([{ path: '*', element: <App /> }]);
 createRoot(document.getElementById('root')!).render(<RouterProvider router={router} />);

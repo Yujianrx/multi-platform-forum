@@ -126,15 +126,18 @@ test('手机论坛版块、搜索和发帖表单无横向溢出', async ({ page 
     .getByRole('navigation', { name: '手机导航' })
     .getByRole('link', { name: '讨论', exact: true })
     .click();
-  await expect(page.locator('.topic-row').first()).toBeVisible();
-  await expect(page.locator('.forum-sidebar')).toBeVisible();
-  await page.getByLabel('搜索话题', { exact: true }).fill('欢迎来到讨论区');
-  await page.getByRole('button', { name: '执行话题搜索' }).click();
-  await expect(page.locator('.topic-row')).toHaveCount(1);
+  await expect(page.locator('.m-topic').first()).toBeVisible();
+  await page.getByRole('button', { name: '筛选讨论', exact: true }).click();
+  await expect(page.getByLabel('论坛版块')).toBeVisible();
+  await page.getByRole('button', { name: '完成', exact: true }).click();
+  await page.getByRole('button', { name: '搜索讨论', exact: true }).click();
+  await page.getByLabel('搜索关键词', { exact: true }).fill('欢迎来到讨论区');
+  await page.getByRole('dialog').getByRole('button', { name: '搜索', exact: true }).click();
+  await expect(page.locator('.m-topic')).toHaveCount(1);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
     true,
   );
-  await page.locator('.topic-title-line a').click();
+  await page.locator('.m-topic-title').click();
   await expect(page.locator('.forum-post').first()).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
     true,

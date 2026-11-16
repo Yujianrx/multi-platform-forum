@@ -1,6 +1,8 @@
 import { HonorStrip } from '../Honors';
 import { MediaComposer, CommentMedia, type MediaFile } from '../MediaComposer';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, lazy } from 'react';
+import { useMobile } from '../mobile/useMobile';
+const MobileForum = lazy(() => import('../mobile/MobileForum'));
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
   MessageSquare,
@@ -138,6 +140,7 @@ export function ForumPreview({ related }: { related?: string }) {
   );
 }
 export function Forum() {
+  const mobile = useMobile();
   const [params, setParams] = useSearchParams(),
     [query, setQuery] = useState(params.get('q') || '');
   const boards = useApi('/forum/boards'),
@@ -153,6 +156,22 @@ export function Forum() {
     next.delete('page');
     setParams(next);
   }
+  if (mobile)
+    return (
+      <MobileForum
+        params={params}
+        topics={topics}
+        boards={boards}
+        resource={resource}
+        filter={filter}
+        onPage={(p) => {
+          const next = new URLSearchParams(params);
+          next.set('page', String(p));
+          setParams(next);
+          window.scrollTo(0, 0);
+        }}
+      />
+    );
   return (
     <div className="forum-page">
       <div className="forum-heading">

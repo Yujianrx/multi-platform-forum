@@ -34,11 +34,11 @@ test('三张图片轮播可切换、循环、键盘与手机手势操作', async
   const cdp = await page.context().newCDPSession(page);
   await cdp.send('Input.dispatchTouchEvent', {
     type: 'touchStart',
-    touchPoints: [{ x: box.x + 280, y: box.y + 320 }],
+    touchPoints: [{ x: box.x + 280, y: box.y + box.height / 2 }],
   });
   await cdp.send('Input.dispatchTouchEvent', {
     type: 'touchMove',
-    touchPoints: [{ x: box.x + 110, y: box.y + 320 }],
+    touchPoints: [{ x: box.x + 110, y: box.y + box.height / 2 }],
   });
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
   await expect(carousel).toHaveAttribute('data-slide', '2');
@@ -137,10 +137,13 @@ test('红色品牌主题的首页、论坛、编辑器与资料页适配手机�
       await expect
         .poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1))
         .toBe(true);
-      const logo = (await page.locator('.site-header .brand-wordmark').boundingBox())!;
-      const title = (await page.locator('.site-header .brand-title').boundingBox())!;
-      expect(logo.y + logo.height).toBeLessThanOrEqual(title.y + 1);
-      expect(Math.abs(logo.x + logo.width / 2 - title.x - title.width / 2)).toBeLessThan(2);
+      if (width > 760 || route === '/') {
+        await expect(page.locator('.site-header .brand-wordmark')).toBeVisible();
+        const logo = (await page.locator('.site-header .brand-wordmark').boundingBox())!;
+        const title = (await page.locator('.site-header .brand-title').boundingBox())!;
+        expect(logo.y + logo.height).toBeLessThanOrEqual(title.y + 1);
+        expect(Math.abs(logo.x + logo.width / 2 - title.x - title.width / 2)).toBeLessThan(2);
+      }
       if (route === '/' && width > 760) {
         const hero = (await page.locator('.image-carousel').boundingBox())!;
         const heading = (await page.locator('.image-carousel h1').boundingBox())!;

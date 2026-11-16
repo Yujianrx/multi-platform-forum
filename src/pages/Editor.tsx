@@ -2,7 +2,8 @@ import { useEditingGuard } from '../EditingGuard';
 import { DeleteDraftButton, isDeletableDraft } from '../DraftActions';
 import { MediaComposer, mediaAccept } from '../MediaComposer';
 import { useEffect, useRef, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useMobile } from '../mobile/useMobile';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
   Sparkles,
   Code2,
@@ -42,6 +43,10 @@ const emptyFields = {
   result: '',
 };
 export function Editor() {
+  const mobile = useMobile();
+  const [searchParams] = useSearchParams();
+  const requestedType = searchParams.get('type');
+  const startedType = useRef<string | null>(null);
   const { id } = useParams(),
     nav = useNavigate(),
     { toast, user } = useApp(),
@@ -111,7 +116,7 @@ export function Editor() {
     const observer = new ResizeObserver(measure);
     observer.observe(header);
     return () => observer.disconnect();
-  }, []);
+  }, [mobile]);
   async function save(submit = false): Promise<any> {
     while (inFlight.current) await inFlight.current;
     const value = current.current;
@@ -175,6 +180,23 @@ export function Editor() {
       setBusy(false);
     }
   }
+  // Mobile's type picker enters the same creation/save/upload pipeline.
+  // The ref prevents duplicate draft creation on repeated effect execution.
+  useEffect(() => {
+    if (id) {
+      startedType.current = null;
+      return;
+    }
+    if (
+      !tax.data ||
+      !requestedType ||
+      !['experience', 'project', 'skill', 'prompt'].includes(requestedType) ||
+      startedType.current === requestedType
+    )
+      return;
+    startedType.current = requestedType;
+    void create(requestedType);
+  }, [id, requestedType, tax.data]);
   async function doUpload(file: File) {
     if (!id) return;
     setFailedFile(null);
