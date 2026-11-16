@@ -1,0 +1,92 @@
+.api-access .panel {
+  min-width: 0;
+}
+.api-access h2 {
+  margin-bottom: 12px;
+}
+.api-access p {
+  line-height: 1.8;
+}
+.api-key-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 130px auto;
+  align-items: end;
+  gap: 14px;
+  margin: 24px 0;
+}
+.api-key-form .field {
+  margin: 0;
+}
+.api-key-form > button {
+  margin-bottom: 0;
+  min-height: 44px;
+}
+.api-secret-box {
+  padding: 18px;
+  border: 1px solid #e5a9ad;
+  background: #fff6f5;
+  border-radius: 16px;
+  margin-bottom: 20px;
+}
+.api-secret-box input {
+  width: 100%;
+  margin: 12px 0;
+  font-family: monospace;
+}
+.api-key-actions {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.api-key-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 18px 0;
+  border-top: 1px solid #eee1df;
+}
+.api-key-row > div {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+.api-key-row strong {
+  overflow-wrap: anywhere;
+}
+.api-key-row small {
+  color: #806d70;
+}
+.api-endpoint {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  justify-content: space-between;
+}
+.api-endpoint code {
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+.api-quickstart pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 13px;
+  line-height: 1.7;
+  padding: 18px;
+  border-radius: 14px;
+  background: #fcf6f4;
+}
+@media (max-width: 700px) {
+  .api-key-form {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+  .api-endpoint {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .api-key-row {
+    gap: 10px;
+  }
+}

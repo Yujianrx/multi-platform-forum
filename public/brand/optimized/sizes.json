@@ -1,0 +1,62 @@
+[
+  {
+    "name": "mascot",
+    "originalBytes": 1193469,
+    "optimizedBytes": 85196
+  },
+  {
+    "name": "community",
+    "originalBytes": 1503991,
+    "optimizedBytes": 103106
+  },
+  {
+    "name": "editor",
+    "originalBytes": 1519116,
+    "optimizedBytes": 109028
+  },
+  {
+    "name": "actions",
+    "originalBytes": 1545180,
+    "optimizedBytes": 130280
+  },
+  {
+    "name": "admin",
+    "originalBytes": 1641637,
+    "optimizedBytes": 118556
+  },
+  {
+    "name": "experience",
+    "originalBytes": 1427073,
+    "optimizedBytes": 50632
+  },
+  {
+    "name": "experience-small",
+    "originalBytes": 1427073,
+    "optimizedBytes": 20524
+  },
+  {
+    "name": "projects",
+    "originalBytes": 1427727,
+    "optimizedBytes": 46228
+  },
+  {
+    "name": "projects-small",
+    "originalBytes": 1427727,
+    "optimizedBytes": 18708
+  },
+  {
+    "name": "skills",
+    "originalBytes": 1513727,
+    "optimizedBytes": 58892
+  },
+  {
+    "name": "skills-small",
+    "originalBytes": 1513727,
+    "optimizedBytes": 24070
+  },
+  {
+    "name": "buttons",
+    "originalBytes": 1887224,
+    "optimizedBytes": 59422
+  }
+]

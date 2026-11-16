@@ -1,0 +1,16 @@
+{$APP_DOMAIN} {
+    encode zstd gzip
+    request_body {
+        max_size 105MB
+    }
+    reverse_proxy app:3000 {
+        transport http {
+            response_header_timeout 120s
+        }
+    }
+    header {
+        -Server
+        Referrer-Policy "same-origin"
+        Permissions-Policy "camera=(), microphone=(), geolocation=()"
+    }
+}

@@ -1,0 +1,79 @@
+.editor-toolbar {
+  position: sticky;
+  top: var(--editor-header-height, 84px);
+  z-index: 25;
+  padding: 14px 0;
+  background: #fff8f6;
+  box-shadow: 0 8px 16px -14px #a92332;
+}
+.editor-toolbar .save-status {
+  font-size: 12px;
+}
+.editor-toolbar .button {
+  flex-shrink: 0;
+}
+.editing-leave-dialog h2 {
+  margin-top: 0;
+}
+.editing-leave-dialog p {
+  line-height: 1.7;
+}
+.editing-leave-actions,
+.draft-detail-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 24px;
+}
+.editing-leave-actions {
+  justify-content: flex-end;
+}
+.home-popularity .rank-item > div {
+  flex: 1;
+  min-width: 0;
+}
+.home-popularity .rank-item h4 {
+  overflow-wrap: anywhere;
+}
+.home-popularity .rank-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+.home-popularity .rank-meta small:last-child {
+  white-space: nowrap;
+}
+.home-popularity .ranking-more {
+  margin-top: 18px;
+  display: inline-block;
+}
+.home-popularity .segmented button {
+  font-size: 13px;
+}
+.home-popularity .rank-periods button {
+  font-size: 12px;
+}
+@media (max-width: 700px) {
+  .editor-toolbar {
+    gap: 10px;
+    padding: 10px 0;
+  }
+  .editor-toolbar > .back-link {
+    width: auto;
+  }
+  .editor-toolbar .button {
+    flex: 1;
+    min-height: 40px;
+    font-size: 12px;
+  }
+  .editor-toolbar .save-status {
+    font-size: 11px;
+  }
+  .editing-leave-actions {
+    justify-content: stretch;
+  }
+  .editing-leave-actions .button {
+    flex: 1;
+  }
+}

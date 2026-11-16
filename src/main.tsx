@@ -1,0 +1,15 @@
+import { createRoot } from 'react-dom/client';
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import App from './App';
+import './styles.css';
+import './brand-assets.css';
+import './brand.css';
+import './community-theme.css';
+import './red-brand.css';
+import './button-skins.css';
+import './admin-type.css';
+import './account-experience.css';
+import './honors.css';
+import './editing-experience.css';
+const router = createBrowserRouter([{ path: '*', element: <App /> }]);
+createRoot(document.getElementById('root')!).render(<RouterProvider router={router} />);

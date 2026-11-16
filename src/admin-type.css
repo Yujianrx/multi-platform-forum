@@ -1,0 +1,204 @@
+/* The admin area increases each text tier by one pixel; the public site is unchanged. */
+.admin-page {
+  font-size: 17px;
+}
+.admin-page .admin-title h1 {
+  font-size: 30px;
+}
+.admin-page .admin-title p {
+  font-size: 13px;
+}
+.admin-page .role-label {
+  font-size: 12px;
+}
+.admin-page .admin-nav > button {
+  font-size: 12px;
+}
+.admin-page .admin-content > .section-heading h2 {
+  font-size: 20px;
+}
+.admin-page h3 {
+  font-size: 18px;
+}
+.admin-page .field {
+  font-size: 14px;
+}
+.admin-page :is(input, textarea, select) {
+  font-size: 15px;
+}
+.admin-page .button {
+  font-size: 15px;
+}
+.admin-page .checkbox {
+  font-size: 14px;
+}
+.admin-page :is(.small-button, .tag-picker legend, .department-picker legend) {
+  font-size: 13px;
+}
+.admin-page :is(.field small, .form-tip, .tag-picker label, .department-picker label) {
+  font-size: 12px;
+}
+.admin-page .admin-stats span {
+  font-size: 12px;
+}
+.admin-page .admin-stats strong {
+  font-size: 31px;
+}
+.admin-page .admin-stats small {
+  font-size: 11px;
+}
+.admin-page .service-status b {
+  font-size: 13px;
+}
+.admin-page :is(.service-status p, .service-status .notice, .admin-shortcuts .button) {
+  font-size: 12px;
+}
+.admin-page .table-wrap table,
+.admin-page .table-wrap td,
+.admin-page .table-body {
+  font-size: 12px;
+}
+.admin-page :is(.table-wrap th, .table-actions .text-button) {
+  font-size: 11px;
+}
+.admin-page :is(.table-wrap td > small, .table-wrap .id-cell, .table-wrap pre) {
+  font-size: 10px;
+}
+.admin-page .review-item .section-heading h3 {
+  font-size: 17px;
+}
+.admin-page .review-item > p {
+  font-size: 13px;
+}
+.admin-page .review-item .review-reason {
+  font-size: 11px;
+}
+.admin-page .taxonomy-grid h3 {
+  font-size: 16px;
+}
+.admin-page .taxonomy-row {
+  font-size: 12px;
+}
+.admin-page .taxonomy-row .text-button {
+  font-size: 11px;
+}
+.admin-page .order-input {
+  font-size: 12px;
+}
+.admin-page .dialog-heading h2 {
+  font-size: 21px;
+}
+.admin-page .badge {
+  font-size: 11px;
+}
+.admin-page .muted {
+  font-size: 15px;
+}
+@media (max-width: 760px) {
+  .admin-page .field {
+    font-size: 13px;
+  }
+  .admin-page .field small {
+    font-size: 11px;
+  }
+  .admin-page .admin-title h1 {
+    font-size: 26px;
+  }
+  .admin-page .admin-title p {
+    font-size: 11px;
+  }
+  .admin-page .admin-title .eyebrow {
+    font-size: 9px;
+  }
+  .admin-page :is(.role-label, .admin-nav > button) {
+    font-size: 10px;
+  }
+  .admin-page .admin-stats span {
+    font-size: 11px;
+  }
+  .admin-page .admin-stats strong {
+    font-size: 28px;
+  }
+  .admin-page .admin-stats small {
+    font-size: 10px;
+  }
+  .admin-page .service-status h3 {
+    font-size: 16px;
+  }
+  .admin-page .service-status b {
+    font-size: 12px;
+  }
+  .admin-page :is(.service-status p, .service-status .notice, .admin-shortcuts .button) {
+    font-size: 11px;
+  }
+  .admin-page .service-status .badge {
+    font-size: 9px;
+  }
+  .admin-page .admin-content .panel > .muted {
+    font-size: 11px;
+  }
+  .admin-page :is(.admin-filter input, .admin-filter select) {
+    font-size: 12px;
+  }
+  .admin-page .review-item .section-heading h3 {
+    font-size: 16px;
+  }
+  .admin-page .review-item .actions .text-button {
+    font-size: 11px;
+  }
+  .admin-page .dialog-heading h2 {
+    font-size: 20px;
+  }
+  .admin-page .three-fields {
+    grid-template-columns: 1fr;
+  }
+}
+.review-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px 18px;
+  margin-bottom: 16px;
+}
+.review-toolbar .actions {
+  margin-left: auto;
+}
+.review-toolbar .checkbox {
+  margin: 0;
+}
+.review-choice {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.review-choice input {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  accent-color: var(--brand);
+}
+.review-choice h3 {
+  overflow-wrap: anywhere;
+}
+.review-batch-errors {
+  margin-bottom: 16px;
+}
+.review-batch-errors p {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow-wrap: anywhere;
+}
+.review-batch-errors p:last-child {
+  margin-bottom: 0;
+}
+@media (max-width: 600px) {
+  .review-toolbar .actions {
+    width: 100%;
+    margin-left: 0;
+  }
+  .review-toolbar .actions button {
+    flex: 1;
+  }
+}

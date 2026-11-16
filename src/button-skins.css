@@ -1,0 +1,92 @@
+/* Three horizontal slices: end caps keep the same proportions at every width. */
+.button {
+  --skin-height: 44px;
+  --skin-image: var(--brand-skin-primary);
+}
+.button,
+.button.dark,
+.invitation-card .button,
+.image-carousel .button.carousel-primary,
+.image-carousel .button.carousel-secondary,
+.forum-heading > .button,
+.button:hover:not(:disabled),
+.button.dark:hover,
+.invitation-card .button:hover,
+.image-carousel .button.carousel-primary:hover,
+.image-carousel .button.carousel-secondary:hover,
+.forum-heading > .button:hover,
+.button.secondary,
+.button.secondary:hover:not(:disabled) {
+  background: transparent;
+  border: 0 solid transparent;
+  border-image-source: var(--skin-image);
+  border-image-slice: 0 181 fill;
+  border-image-width: 0 calc(var(--skin-height) / 2);
+  border-image-repeat: stretch;
+  min-height: var(--skin-height);
+  line-height: 22px;
+  padding: calc((var(--skin-height) - 22px) / 2) 24px;
+}
+.button.secondary,
+.image-carousel .button.carousel-secondary {
+  --skin-image: var(--brand-skin-secondary);
+}
+.button.secondary:hover:not(:disabled),
+.image-carousel .button.carousel-secondary:hover {
+  --skin-image: var(--brand-skin-selected);
+}
+.button:active:not(:disabled),
+.button.dark:active,
+.invitation-card .button:active,
+.image-carousel .button.carousel-primary:active,
+.forum-heading > .button:active {
+  --skin-image: var(--brand-skin-pressed);
+}
+.button.secondary:active:not(:disabled),
+.image-carousel .button.carousel-secondary:active {
+  --skin-image: var(--brand-skin-selected);
+}
+.header-inner .button.publish,
+.header-inner .button.publish:hover {
+  --skin-height: 40px;
+}
+.button.small-button,
+.button.small-button:hover {
+  --skin-height: 36px;
+  padding-inline: 18px;
+}
+.image-carousel .button,
+.image-carousel .button:hover {
+  --skin-height: 48px;
+}
+.segmented > button,
+.forum-scope button,
+.type-filters button,
+.forum-sorts button {
+  --skin-height: 36px;
+  min-height: var(--skin-height);
+  line-height: 20px;
+  padding-block: calc((var(--skin-height) - 20px) / 2);
+  border: 0 solid transparent;
+}
+.segmented > button.selected,
+.forum-scope button.active,
+.type-filters button.selected,
+.forum-sorts button.active {
+  background: transparent;
+  border-image-source: var(--brand-skin-selected);
+  border-image-slice: 0 181 fill;
+  border-image-width: 0 calc(var(--skin-height) / 2);
+  border-image-repeat: stretch;
+}
+@media (max-width: 760px) {
+  .image-carousel .button,
+  .image-carousel .button:hover {
+    --skin-height: 40px;
+    padding-inline: 18px;
+  }
+  .forum-scope button,
+  .forum-sorts button {
+    --skin-height: 36px;
+  }
+}
