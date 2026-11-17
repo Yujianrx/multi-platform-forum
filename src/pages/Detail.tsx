@@ -63,9 +63,15 @@ export function Detail() {
   async function action(fn: () => Promise<any>, success?: string) {
     setBusy(true);
     try {
-      await fn();
+      const result = await fn();
       if (success) toast(success);
-      detail.reload();
+      if (result?.metrics)
+        detail.setData((previous: any) =>
+          previous
+            ? { ...previous, metrics: { ...previous.metrics, ...result.metrics } }
+            : previous,
+        );
+      else await detail.refresh();
     } catch (e: any) {
       toast(e.message, true);
     } finally {
@@ -336,12 +342,19 @@ export function Detail() {
                   setText('');
                   setCommentFiles([]);
                   setReply(null);
-                  comments.reload();
+                  if (result.status === 'approved')
+                    detail.setData((previous: any) => ({
+                      ...previous,
+                      metrics: { ...previous.metrics, comments: previous.metrics.comments + 1 },
+                    }));
+                  void comments
+                    .refresh()
+                    .catch(() => toast('评论已提交，列表更新失败，请刷新评论区', true));
                   toast(
                     result.status === 'approved'
                       ? '评论已发布'
                       : result.status === 'review'
-                        ? '评论附件等待安全检查'
+                        ? '评论与附件已提交审核'
                         : '评论已提交审核',
                   );
                 } catch (e: any) {
@@ -428,7 +441,7 @@ export function Detail() {
                           if (!confirm('确认删除这条评论？')) return;
                           try {
                             await api('/comments/' + cm.id, { method: 'DELETE' });
-                            comments.reload();
+                            await comments.refresh();
                           } catch (e: any) {
                             toast(e.message, true);
                           }

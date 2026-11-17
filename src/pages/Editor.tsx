@@ -209,7 +209,7 @@ export function Editor() {
           ? { ...f, coverId: f.coverId || result.id }
           : { ...f, attachments: [...new Set([...f.attachments, result.id])] },
       );
-      toast(result.scan_status === 'clean' ? '上传成功' : '已上传，文件等待安全复核');
+      toast(result.scan_status === 'clean' ? '上传成功' : '已上传，将随正文一起审核');
     } catch (e: any) {
       setFailedFile(file);
       toast(e.message, true);
@@ -226,7 +226,7 @@ export function Editor() {
         result.status === 'approved'
           ? '内容已发布'
           : result.status === 'review'
-            ? '附件等待安全检查，可在个人中心查看'
+            ? '正文与附件等待审核，可在个人中心查看'
             : '已提交审核，可在个人中心查看进度',
       );
       guard.allowNavigation();
@@ -695,7 +695,7 @@ export function Editor() {
                   ))}
                 </div>
                 <p className="form-tip">
-                  文件会独立检查安全性，上传的代码不会在平台执行。修改或替换素材后请重新提交审核。
+                  正文和附件一起提交审核；免审账号直接发布。修改或替换素材后请重新提交。
                 </p>
               </div>
             </aside>

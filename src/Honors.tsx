@@ -339,7 +339,9 @@ export function PublicHonors({ userId }: { userId: string }) {
     <Loading />
   );
 }
-export function HonorLeaderboard() {
+export function HonorLeaderboard({
+  onRefreshReady,
+}: { onRefreshReady?: (refresh: () => Promise<unknown>) => void } = {}) {
   const [params, setParams] = useSearchParams(),
     week = params.get('week') || honorWeek(),
     board = params.get('board') || 'all',
@@ -348,6 +350,9 @@ export function HonorLeaderboard() {
   const p = useApi(
     `/honors/board?week=${week}&board=${board}&page=${page}${version ? '&version=' + version : ''}`,
   );
+  useEffect(() => {
+    onRefreshReady?.(p.refresh);
+  }, [onRefreshReady, p.refresh]);
   function change(key: string, value: string) {
     const next = new URLSearchParams(params);
     next.set(key, value);

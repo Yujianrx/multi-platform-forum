@@ -25,6 +25,7 @@ import {
 import { api, send, useApi, date, size, typeLabels } from '../api';
 import { useApp } from '../context';
 import { HonorsAdmin } from '../HonorsAdmin';
+import { ReviewMaterials } from '../admin/ReviewMaterials';
 import { Field, Loading, ErrorState, Empty, Pagination, Badge, MarkdownBody } from '../components';
 function Modal({
   title,
@@ -218,13 +219,6 @@ export function Admin() {
         await act(() =>
           send('/admin/reports/' + modal.item.id, { resolution: form.reason }, 'PATCH'),
         );
-      else if (kind === 'file')
-        await act(() =>
-          send('/admin/files/' + modal.item.id + '/review', {
-            decision: form.decision === 'approved' ? 'clean' : 'blocked',
-            ...(form.decision === 'rejected' ? { reason: form.reason } : {}),
-          }),
-        );
       else if (kind === 'announcement')
         await act(() => send('/admin/announcement', { message: form.message }), '公告已发送');
       else if (kind === 'banner')
@@ -417,7 +411,7 @@ export function Admin() {
                           {overview.data.scanner === 'configured' ? '已配置 ClamAV 连接' : '未配置'}
                         </b>
                         <p>
-                          连接配置不代表服务健康；每份文件的实际扫描结果见附件与存储。无法扫描的文件隔离待检查。
+                          待检查文件随正文一并审核；免审账号的附件同步免审，已检出恶意的文件仍被阻止。
                         </p>
                       </div>
                     </div>
@@ -750,33 +744,12 @@ export function Admin() {
                         <Badge status={j.status} />
                       </div>
                       <p>{j.data?.summary || j.comment_body}</p>
-                      {j.comment_files?.length > 0 && (
-                        <div className="media-downloads">
-                          {j.comment_files.map((f: any) => (
-                            <div key={f.id}>
-                              <a
-                                className="media-download"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                href={'/api/files/' + f.id}
-                              >
-                                <span>
-                                  <b>{f.original_name}</b>
-                                  <small>{f.kind === 'image' ? '评论图片' : '评论附件'}</small>
-                                </span>
-                                <Badge status={f.scan_status} />
-                              </a>
-                              {f.kind === 'image' && f.scan_status === 'clean' && (
-                                <img
-                                  src={'/api/files/' + f.id}
-                                  alt={f.original_name}
-                                  style={{ maxWidth: 180, maxHeight: 140, objectFit: 'contain' }}
-                                />
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      )}
+                      <details className="review-materials-toggle">
+                        <summary>
+                          查看正文与附件{j.files?.length ? `（${j.files.length}）` : ''}
+                        </summary>
+                        <ReviewMaterials job={j} />
+                      </details>
                       <p className="review-reason">
                         {j.last_error || '等待审核执行'} · 已尝试 {j.attempts} 次
                       </p>
@@ -1045,9 +1018,9 @@ export function Admin() {
                                   >
                                     下载隔离文件
                                   </a>
-                                  <button className="text-button" onClick={() => open('file', r)}>
-                                    记录离线检查
-                                  </button>
+                                  <Link className="text-button" to="/admin?section=moderation">
+                                    查看审核队列
+                                  </Link>
                                 </div>
                               </td>
                             </>
@@ -1210,7 +1183,6 @@ export function Admin() {
                 rule: '新增审核规则',
                 review: '人工审核',
                 batchReview: `批量退回 ${modal.item.ids?.length || 0} 项`,
-                file: '文件离线检查',
                 report: '处理举报',
                 banner: '添加首页轮播',
                 announcement: '发布管理员公告',
@@ -1359,9 +1331,7 @@ export function Admin() {
                     />
                     发布免审
                   </label>
-                  <p className="form-tip">
-                    开启后，新提交的帖子、文章和回复直接发布；附件仍需通过文件安全检查。
-                  </p>
+                  <p className="form-tip">开启后，新提交的帖子、文章、回复及其图片和附件均免审。</p>
                   {form.role === 'moderator' && (
                     <div className="scope-editor">
                       <h3>版主管理范围</h3>
@@ -1492,15 +1462,13 @@ export function Admin() {
                   </Field>
                 </>
               )}
-              {['review', 'batchReview', 'file', 'report'].includes(modal.kind) && (
+              {['review', 'batchReview', 'report'].includes(modal.kind) && (
                 <>
-                  {modal.kind === 'file' && (
-                    <p className="notice">
-                      确认文件可以共享后通过。已阻止的文件需重新上传安全版本。
-                    </p>
-                  )}
                   {modal.kind === 'review' && (
-                    <p className="notice">通过内容时同步通过关联文件。</p>
+                    <>
+                      <ReviewMaterials job={modal.item} />
+                      <p className="notice">通过内容时同步通过关联文件。</p>
+                    </>
                   )}
                   {modal.kind === 'review' &&
                     form.decision === 'approved' &&
@@ -1521,28 +1489,16 @@ export function Admin() {
                         value={form.decision}
                         onChange={(e) => change('decision', e.target.value)}
                       >
-                        <option value="approved">
-                          {modal.kind === 'file' ? '通过文件' : '通过审核'}
-                        </option>
-                        <option value="rejected">
-                          {modal.kind === 'file' ? '阻止文件' : '退回内容'}
-                        </option>
+                        <option value="approved">通过正文及附件</option>
+                        <option value="rejected">退回内容</option>
                       </select>
                     </Field>
                   )}
                   {(form.decision === 'rejected' || modal.kind === 'report') && (
-                    <Field
-                      label={
-                        modal.kind === 'report'
-                          ? '处理原因'
-                          : modal.kind === 'file'
-                            ? '阻止原因'
-                            : '退回原因'
-                      }
-                    >
+                    <Field label={modal.kind === 'report' ? '处理原因' : '退回原因'}>
                       <textarea
                         required
-                        minLength={modal.kind === 'file' ? 10 : 5}
+                        minLength={5}
                         maxLength={1000}
                         value={form.reason}
                         onChange={(e) => change('reason', e.target.value)}
@@ -1637,12 +1593,10 @@ export function Admin() {
                 >
                   {busy
                     ? '正在保存…'
-                    : ['review', 'file', 'batchReview'].includes(modal.kind)
+                    : ['review', 'batchReview'].includes(modal.kind)
                       ? form.decision === 'approved'
                         ? '确认通过'
-                        : modal.kind === 'file'
-                          ? '确认阻止'
-                          : '确认退回'
+                        : '确认退回'
                       : modal.kind === 'deleteUser'
                         ? '确认删除账号'
                         : '确认保存'}

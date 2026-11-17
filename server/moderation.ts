@@ -2,6 +2,7 @@ import { id, notify, hash, type AppContext, fail, type User, audit } from './cor
 import type { Row, Queryable } from './db.js';
 import { canManage, revisionManageSQL } from './permissions.js';
 import { syncContentHonors, assessContribution, verifyContributionFiles } from './honors-engine.js';
+import { approveLinkedFiles } from './moderation-files.js';
 export type Decision = {
   decision: 'approved' | 'rejected' | 'review';
   reason: string;
@@ -72,6 +73,7 @@ export async function enqueue(
     )
   )[0];
   if (!exempt) return 'queued';
+  await approveLinkedFiles(tx, job, exempt.id, true);
   await applyDecision(
     tx,
     job,
@@ -117,7 +119,7 @@ async function applyDecision(
       result = {
         decision: 'review',
         categories: ['file-scan'],
-        reason: '评论附件尚未通过独立安全检查，请先处理附件隔离',
+        reason: '请在本次审核中一并检查回复与附件',
       };
   }
   if (job.revision_id && result.decision === 'approved') {
@@ -129,7 +131,7 @@ async function applyDecision(
       result = {
         decision: 'review',
         categories: ['file-scan'],
-        reason: '附件尚未通过独立安全扫描，请先处理文件隔离',
+        reason: '请在本次审核中一并检查正文与附件',
       };
   }
   await tx.query(
@@ -170,7 +172,7 @@ async function applyDecision(
         result = {
           decision: 'review',
           categories: ['file-scan'],
-          reason: '附件尚未通过独立安全扫描，请先处理文件隔离',
+          reason: '请在本次审核中一并检查正文与附件',
         };
     }
     await tx.query(
@@ -418,28 +420,9 @@ export async function manualReview(
     }
     let approvedFiles = 0;
     if (decision === 'approved') {
-      const files = await tx.query(
-        j.revision_id
-          ? 'SELECT a.* FROM attachments a JOIN revision_attachments ra ON ra.attachment_id=a.id WHERE ra.revision_id=$1 ORDER BY a.id FOR UPDATE OF a'
-          : 'SELECT a.* FROM attachments a JOIN comment_attachments ca ON ca.attachment_id=a.id WHERE ca.comment_id=$1 ORDER BY a.id FOR UPDATE OF a',
-        [target.id],
-      );
-      if (files.some((f) => f.deleted || f.scan_status === 'blocked'))
-        fail(409, '关联文件已被阻止或删除，请移除或重新上传后再审核');
-      for (const f of files) {
-        if (f.scan_status === 'clean') continue;
-        await tx.query(
-          "UPDATE attachments SET scan_status='clean',scan_reason='随内容人工审核通过' WHERE id=$1",
-          [f.id],
-        );
-        await audit(tx, user.id, 'file.review', f.id, {
-          decision: 'clean',
-          reason: '随内容人工审核通过',
-          jobId,
-          previousStatus: f.scan_status,
-        });
-        approvedFiles++;
-      }
+      const count = await approveLinkedFiles(tx, j, user.id);
+      if (count === null) fail(409, '关联文件已被阻止或删除，请移除或重新上传后再审核');
+      approvedFiles = count;
     }
     await applyDecision(
       tx,

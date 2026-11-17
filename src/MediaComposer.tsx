@@ -49,7 +49,7 @@ export function AttachmentList({
               <b>{f.original_name}</b>
               <small>
                 {size(Number(f.size))}
-                {f.scan_status !== 'clean' ? ' · 等待安全复核' : ' · 点击下载'}
+                {f.scan_status !== 'clean' ? ' · 随正文审核' : ' · 点击下载'}
               </small>
             </span>
           </a>

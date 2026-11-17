@@ -39,7 +39,7 @@ export default function MobileContentCard({ item }: { item: any }) {
         {hasCover ? (
           <h3 className="m-card-title">{item.title || '未命名草稿'}</h3>
         ) : (
-          item.summary && <p className="m-card-summary">{previewText(item.summary)}</p>
+          <p className="m-card-summary">{previewText(item.summary)}</p>
         )}
       </Link>
       <div className="m-card-meta">

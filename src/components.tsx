@@ -259,22 +259,33 @@ export function ContentCard({ item }: { item: any }) {
     </article>
   );
 }
-export function MarkdownBody({ children }: { children: string }) {
+export function MarkdownBody({
+  children,
+  fileUrl,
+}: {
+  children: string;
+  fileUrl?: (url: string) => string | undefined;
+}) {
   return (
     <div className="prose">
       <Markdown
         remarkPlugins={[remarkGfm, remarkRichText]}
         components={{
           a: ({ href, children }) => (
-            <a href={href} target="_blank" rel="noopener noreferrer">
+            <a
+              href={href && fileUrl ? fileUrl(href) : href}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               {children} ↗
             </a>
           ),
           img: ({ src, alt }) =>
             typeof src === 'string' &&
+            (!fileUrl || fileUrl(src)) &&
             (isSticker(src) || /^\/api\/files\/[0-9a-f-]{36}(\?.*)?$/.test(src)) ? (
               <a
-                href={src}
+                href={fileUrl ? fileUrl(src) : src}
                 target="_blank"
                 rel="noopener noreferrer"
                 className={isSticker(src) ? 'sticker-link' : 'content-image-link'}
@@ -283,7 +294,7 @@ export function MarkdownBody({ children }: { children: string }) {
                   loading="lazy"
                   decoding="async"
                   className={isSticker(src) ? 'sticker-image' : 'content-image'}
-                  src={src}
+                  src={fileUrl ? fileUrl(src) : src}
                   alt={alt || '正文图片'}
                 />
               </a>

@@ -442,7 +442,7 @@ export function ForumEditor() {
           ? value.status === 'approved'
             ? '话题已发布'
             : value.status === 'review'
-              ? '附件等待安全检查'
+              ? '正文与附件等待审核'
               : '话题已提交审核，通过后会出现在讨论区'
           : '草稿已保存',
       );
@@ -632,14 +632,30 @@ export function ForumTopic() {
   useEffect(() => {
     if (live) send('/forum/topics/' + id + '/visit').catch(() => {});
   }, [id, live]);
-  async function act(fn: () => Promise<any>, message?: string | ((result: any) => string)) {
+  async function act(
+    fn: () => Promise<any>,
+    message?: string | ((result: any) => string),
+    update: 'all' | 'comments' | 'none' = 'all',
+  ) {
     setBusy(true);
     try {
       const result = await fn();
       if (message) toast(typeof message === 'function' ? message(result) : message);
-      detail.reload();
-      topic.reload();
-      comments.reload();
+      if (result?.metrics)
+        detail.setData((previous: any) =>
+          previous
+            ? { ...previous, metrics: { ...previous.metrics, ...result.metrics } }
+            : previous,
+        );
+      else if (update === 'comments') {
+        if (result.status === 'approved')
+          detail.setData((previous: any) => ({
+            ...previous,
+            metrics: { ...previous.metrics, comments: previous.metrics.comments + 1 },
+          }));
+        await comments.refresh();
+      } else if (update === 'all')
+        await Promise.all([detail.refresh(), topic.refresh(), comments.refresh()]);
     } catch (e: any) {
       toast(e.message, true);
     } finally {
@@ -654,6 +670,7 @@ export function ForumTopic() {
       await act(
         () => send('/contents/' + id + '/reports', { reason, commentId: commentId || null }),
         '举报已提交',
+        'none',
       );
   }
   if (detail.loading || topic.loading) return <Loading />;
@@ -1017,16 +1034,15 @@ export function ForumTopic() {
               setText('');
               setReplyFiles([]);
               setQuote(null);
-              setOnlyAuthor(false);
-              setPage(1);
               return result;
             },
             (result) =>
               result.status === 'approved'
                 ? '回复已发布'
                 : result.status === 'review'
-                  ? '回复附件等待安全检查'
+                  ? '回复与附件已提交审核'
                   : '回复已提交审核',
+            'comments',
           );
         }}
       >

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Link, NavLink, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -20,6 +20,7 @@ import {
 import { BrandIdentity } from '../BrandIdentity';
 import { useApp } from '../context';
 import { MobileSheet } from './MobileSheet';
+import { HOME_REFRESH_EVENT } from './MobileRefresh';
 
 export function MobileHeader() {
   const { site } = useApp(),
@@ -159,6 +160,7 @@ export function MobileNavigation({
   unread: number;
   logout: () => Promise<void>;
 }) {
+  const lastHomeTap = useRef(0);
   const [publishing, setPublishing] = useState(false),
     location = useLocation(),
     [params] = useSearchParams();
@@ -167,7 +169,22 @@ export function MobileNavigation({
   return (
     <>
       <nav className="m-bottom-nav" aria-label="手机导航">
-        <NavLink to="/" end>
+        <NavLink
+          to="/"
+          end
+          onClick={(event) => {
+            const now = performance.now();
+            if (location.pathname === '/') {
+              event.preventDefault();
+              if (lastHomeTap.current && now - lastHomeTap.current < 500) {
+                lastHomeTap.current = 0;
+                window.dispatchEvent(new Event(HOME_REFRESH_EVENT));
+                return;
+              }
+            }
+            lastHomeTap.current = now;
+          }}
+        >
           <House />
           <span>首页</span>
         </NavLink>

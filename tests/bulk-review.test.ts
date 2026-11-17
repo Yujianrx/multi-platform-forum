@@ -2,6 +2,8 @@ import { beforeAll, beforeEach, afterEach, afterAll, test, expect } from 'vitest
 import { openDatabase, migrate, type Database } from '../server/db';
 import { buildApp } from '../server/app';
 import { hash, id, passwordHash, type AppContext } from '../server/core';
+import { mkdir, writeFile } from 'node:fs/promises';
+import sharp from 'sharp';
 let db: Database, app: Awaited<ReturnType<typeof buildApp>>, ctx: AppContext;
 const origin = 'https://community.test',
   category = id(),
@@ -96,6 +98,55 @@ async function content(files = 0, body = '本次项目的实践步骤与结果�
   const job = (await db.query('SELECT id FROM moderation_jobs WHERE revision_id=$1', [rid]))[0];
   return { cid, rid, job: job.id, attachments, data };
 }
+test('审核任务包含正文绑定文件，版主可原位查看但不能跨任务或越权，预览不计下载', async () => {
+  const c = await content(1),
+    other = await content(1, undefined, outsideCategory);
+  const fid = c.attachments[0];
+  await mkdir(ctx.dataDir + '/uploads', { recursive: true });
+  await writeFile(ctx.dataDir + '/uploads/' + fid, 'review-file');
+  const list = await app.inject({ url: '/api/admin/moderation?limit=50', headers: mod.headers });
+  const job = list.json().items.find((j: any) => j.id === c.job);
+  expect(job.files).toEqual([
+    expect.objectContaining({ id: fid, scan_status: 'review', mime: 'text/plain' }),
+  ]);
+  const url = `/api/admin/moderation/${c.job}/files/${fid}`;
+  const read = await app.inject({ url, headers: mod.headers });
+  expect(read.statusCode, read.body).toBe(200);
+  expect(read.body).toBe('review-file');
+  expect(read.headers['content-disposition']).toContain('attachment');
+  expect(read.headers['cache-control']).toBe('private, no-store');
+  expect(
+    (await app.inject({ url: '/api/files/' + fid + '?revision=' + c.rid, headers: mod.headers }))
+      .statusCode,
+  ).toBe(423);
+  expect((await app.inject({ url, headers: member.headers })).statusCode).toBe(403);
+  expect(
+    (
+      await app.inject({
+        url: `/api/admin/moderation/${c.job}/files/${other.attachments[0]}`,
+        headers: admin.headers,
+      })
+    ).statusCode,
+  ).toBe(404);
+  expect(
+    (
+      await app.inject({
+        url: `/api/admin/moderation/${other.job}/files/${other.attachments[0]}`,
+        headers: mod.headers,
+      })
+    ).statusCode,
+  ).toBe(404);
+  expect(
+    await db.query('SELECT id FROM download_events WHERE attachment_id=$1', [fid]),
+  ).toHaveLength(0);
+  await db.query(
+    "UPDATE revisions SET data=jsonb_set(data,'{categoryId}',to_jsonb($1::text)) WHERE id=$2",
+    [outsideCategory, c.rid],
+  );
+  expect((await app.inject({ url, headers: mod.headers })).statusCode).toBe(404);
+  await db.query("UPDATE contents SET state='deleted' WHERE id=$1", [c.cid]);
+  expect((await app.inject({ url, headers: admin.headers })).statusCode).toBe(404);
+});
 const single = (job: string, payload: any = { decision: 'approved' }, actor = admin) =>
   app.inject({
     method: 'POST',
@@ -114,6 +165,92 @@ const file = async (fid: string) =>
   (await db.query('SELECT * FROM attachments WHERE id=$1', [fid]))[0];
 const state = async (cid: string) =>
   (await db.query('SELECT state FROM contents WHERE id=$1', [cid]))[0].state;
+
+test('封面、正文图片及回复图片都在各自审核任务中预览并一起通过', async () => {
+  const c = await content(2);
+  const image = await sharp({ create: { width: 8, height: 8, channels: 3, background: '#c22' } })
+    .webp()
+    .toBuffer();
+  await mkdir(ctx.dataDir + '/uploads', { recursive: true });
+  for (const fid of c.attachments) {
+    await db.query(
+      "UPDATE attachments SET kind='image',mime='image/webp',original_name='图片.webp' WHERE id=$1",
+      [fid],
+    );
+    await writeFile(ctx.dataDir + '/uploads/' + fid, image);
+  }
+  const saved = await app.inject({
+    method: 'PUT',
+    url: '/api/contents/' + c.cid,
+    headers: member.headers,
+    payload: {
+      data: {
+        ...c.data,
+        attachments: [],
+        coverId: c.attachments[0],
+        body: '正文中的图片 ![图片](/api/files/' + c.attachments[1] + ')',
+      },
+      baseRevisionId: c.rid,
+      submit: true,
+    },
+  });
+  expect(saved.statusCode, saved.body).toBe(200);
+  const job = (
+    await db.query('SELECT id FROM moderation_jobs WHERE revision_id=$1', [saved.json().revisionId])
+  )[0].id;
+  const listed = (await app.inject({ url: '/api/admin/moderation?limit=50', headers: mod.headers }))
+    .json()
+    .items.find((j: any) => j.id === job);
+  expect(listed.files).toHaveLength(2);
+  for (const fid of c.attachments) {
+    const read = await app.inject({
+      url: `/api/admin/moderation/${job}/files/${fid}`,
+      headers: mod.headers,
+    });
+    expect(read.statusCode).toBe(200);
+    expect(read.headers['content-type']).toBe('image/webp');
+    expect(read.headers['content-disposition']).toContain('inline');
+  }
+  expect(
+    (
+      await app.inject({
+        url: `/api/admin/moderation/${c.job}/files/${c.attachments[0]}`,
+        headers: admin.headers,
+      })
+    ).statusCode,
+  ).toBe(404);
+  expect((await single(job, undefined, mod)).json().approvedFiles).toBe(2);
+  const fid = id();
+  await db.query(
+    "INSERT INTO attachments(id,content_id,owner_id,original_name,storage_key,mime,size,kind,scan_status,purpose) VALUES($1,$2,$3,'回复.webp',$1,'image/webp',$4,'image','review','comment')",
+    [fid, c.cid, member.id, image.length],
+  );
+  await writeFile(ctx.dataDir + '/uploads/' + fid, image);
+  const comment = await app.inject({
+    method: 'POST',
+    url: `/api/contents/${c.cid}/comments`,
+    headers: member.headers,
+    payload: { body: '回复图片', attachments: [fid] },
+  });
+  expect(comment.statusCode, comment.body).toBe(201);
+  const replyJob = (
+    await db.query('SELECT id FROM moderation_jobs WHERE comment_id=$1', [comment.json().id])
+  )[0].id;
+  expect(
+    (
+      await app.inject({
+        url: `/api/admin/moderation/${replyJob}/files/${fid}`,
+        headers: mod.headers,
+      })
+    ).statusCode,
+  ).toBe(200);
+  expect(
+    (await app.inject({ url: `/api/admin/moderation/${job}/files/${fid}`, headers: mod.headers }))
+      .statusCode,
+  ).toBe(404);
+  expect((await single(replyJob, undefined, mod)).json().approvedFiles).toBe(1);
+  expect((await file(fid)).scan_status).toBe('clean');
+});
 
 test('单条通过无需原因，同步通过绑定文件并记录人工操作，不放行未绑定文件', async () => {
   const c = await content(2);

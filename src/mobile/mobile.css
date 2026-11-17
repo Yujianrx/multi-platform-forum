@@ -597,6 +597,7 @@
     grid-auto-flow: row;
   }
   .mobile-app .m-content-card {
+    position: relative;
     background: #fff;
     border-radius: 11px;
     overflow: hidden;
@@ -616,7 +617,8 @@
     background: #f4efec;
   }
   .mobile-app .m-text-cover {
-    min-height: 195px;
+    width: 100%;
+    aspect-ratio: 4/5;
     padding: 18px 14px;
     display: flex;
     flex-direction: column;
@@ -654,10 +656,6 @@
     background: #e5ece6;
     color: #315b4b;
   }
-  .mobile-app .m-card-project .m-text-cover,
-  .mobile-app .m-card-project .m-card-cover {
-    min-height: 175px;
-  }
   .mobile-app .m-card-skill .m-text-cover {
     background: #ede8f0;
     color: #59475f;
@@ -672,6 +670,7 @@
   }
   .mobile-app .m-card-title,
   .mobile-app .m-card-summary {
+    height: 50.6px;
     color: #3f3238;
     padding: 9px 9px 0;
     margin: 0;
@@ -729,7 +728,12 @@
     stroke-width: 1.5;
   }
   .mobile-app .m-card-status {
-    padding: 0 9px 8px;
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    padding: 3px 7px;
+    border-radius: 6px;
+    background: rgb(255 255 255 / 92%);
     color: #bb737e;
     font-size: 11px;
   }
@@ -1314,7 +1318,6 @@
   }
   .mobile-app .m-text-cover {
     padding: 15px 11px;
-    min-height: 185px;
   }
   .mobile-app .m-text-cover h3 {
     font-size: 19px;
@@ -1335,5 +1338,36 @@
   }
   .mobile-app .m-profile-links {
     gap: 13px;
+  }
+}
+
+@media (max-width: 760px) {
+  html.mobile-app.m-refresh-enabled {
+    overscroll-behavior-y: contain;
+  }
+  .mobile-app .m-refresh {
+    min-height: calc(100dvh - 140px - env(safe-area-inset-bottom));
+  }
+  .mobile-app .m-refresh-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    overflow: hidden;
+    color: #a85a64;
+    font-size: 12px;
+  }
+  .mobile-app .m-refresh-spin {
+    animation: m-refresh-spin 0.9s linear infinite;
+  }
+}
+@keyframes m-refresh-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mobile-app .m-refresh-spin {
+    animation: none;
   }
 }

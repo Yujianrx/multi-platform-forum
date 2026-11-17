@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef, type SetStateAction } from 'react';
 let csrf = '';
 export const setCsrf = (value: string) => {
   csrf = value;
@@ -38,9 +38,36 @@ export function useApi<T = any>(url: string | null) {
     [error, setError] = useState(''),
     [loading, setLoading] = useState(true),
     [tick, setTick] = useState(0);
+  const sequence = useRef(0),
+    currentUrl = useRef(url);
+  currentUrl.current = url;
+  const updateData = useCallback(
+    (value: SetStateAction<T | null>) => {
+      if (currentUrl.current === url) setData(value);
+    },
+    [url],
+  );
   const reload = useCallback(() => setTick((t) => t + 1), []);
+  // Keep mounted content during background updates; stale requests may not
+  // replace a newer response or write into another route.
+  const refresh = useCallback(async () => {
+    if (!url || currentUrl.current !== url) return;
+    const request = ++sequence.current;
+    try {
+      const value = await api<T>(url);
+      if (currentUrl.current === url && request === sequence.current) {
+        setData(value);
+        setDataUrl(url);
+        setError('');
+      }
+      return value;
+    } finally {
+      if (currentUrl.current === url && request === sequence.current) setLoading(false);
+    }
+  }, [url]);
   useEffect(() => {
     let active = true;
+    const request = ++sequence.current;
     setDataUrl(url);
     setData(null);
     setError('');
@@ -51,16 +78,17 @@ export function useApi<T = any>(url: string | null) {
     setLoading(true);
     api<T>(url)
       .then((v) => {
-        if (active) setData(v);
+        if (active && request === sequence.current) setData(v);
       })
       .catch((e) => {
-        if (active) setError(e.message);
+        if (active && request === sequence.current) setError(e.message);
       })
       .finally(() => {
-        if (active) setLoading(false);
+        if (active && request === sequence.current) setLoading(false);
       });
     return () => {
       active = false;
+      ++sequence.current;
     };
   }, [url, tick]);
   // A new route renders before effects clear the previous response. Never expose
@@ -71,7 +99,8 @@ export function useApi<T = any>(url: string | null) {
     error: current ? error : '',
     loading: Boolean(url) && (!current || loading),
     reload,
-    setData,
+    refresh,
+    setData: updateData,
   };
 }
 export function upload(
@@ -134,7 +163,7 @@ export const statusLabels: Record<string, string> = {
   deleted: '已删除',
   failed: '审核异常',
   done: '已完成',
-  clean: '安全检查通过',
+  clean: '可用',
   blocked: '已隔离',
   open: '待处理',
   resolved: '已处理',

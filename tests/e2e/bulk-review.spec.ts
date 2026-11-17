@@ -74,8 +74,16 @@ test('单条通过没有原因输入，并同步通过项目文件', async ({ pa
   await card(page, c.title).getByRole('button', { name: '人工复核' }).click();
   const dialog = page.getByRole('dialog');
   await expect(dialog.locator('textarea')).toHaveCount(0);
+  await expect(dialog.getByText('[dev:review] 项目实施步骤和结果。')).toBeVisible();
+  const reviewFile = dialog.getByRole('link', { name: 'project-document.pdf' });
+  await expect(reviewFile).toBeVisible();
+  expect((await page.request.get((await reviewFile.getAttribute('href'))!)).status()).toBe(200);
+  expect((await page.request.get('/api/files/' + c.attachments[0])).status()).toBe(423);
   await expect(dialog.getByText('通过内容时同步通过关联文件。')).toBeVisible();
   await page.screenshot({ path: 'outputs/人工审核-免填原因.png', fullPage: true });
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(await dialog.evaluate((el) => el.scrollWidth <= el.clientWidth + 1)).toBe(true);
+  await page.screenshot({ path: 'outputs/统一审核-手机.png' });
   await dialog.getByRole('button', { name: '确认通过' }).click();
   await expect(dialog).toHaveCount(0);
   expect((await (await page.request.get('/api/contents/' + c.cid)).json()).state).toBe('published');

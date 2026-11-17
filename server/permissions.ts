@@ -12,6 +12,8 @@ export function relatedAccessSQL(alias = 'c', userParam = '$1') {
 export function manageSQL(alias = 'c', userParam = '$1') {
   return `(${baseManageSQL(alias, userParam)} AND ${relatedAccessSQL(alias, userParam)})`;
 }
+export const moderationJobScope = () =>
+  `${manageSQL()} AND (j.revision_id IS NULL OR ${revisionManageSQL()})`;
 export function visibleSQL(alias = 'c', userParam = '$1') {
   return `(${alias}.visibility='company' OR EXISTS(SELECT 1 FROM content_departments cd JOIN users vu ON vu.department_id=cd.department_id WHERE cd.content_id=${alias}.id AND vu.id=${userParam} AND vu.active))`;
 }

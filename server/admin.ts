@@ -17,7 +17,12 @@ import {
   safeUrl,
   passwordHash,
 } from './core.js';
-import { manageSQL, getContent, revisionManageSQL } from './permissions.js';
+import {
+  manageSQL,
+  getContent,
+  revisionManageSQL,
+  moderationJobScope as jobScope,
+} from './permissions.js';
 import { manualReview } from './moderation.js';
 import { revokeUserApiKeys } from './api-keys.js';
 import { HttpError } from './core.js';
@@ -31,7 +36,6 @@ const validReviewReason = (p: { decision: string; reason: string }) =>
   p.decision === 'approved' || p.reason.length >= 5;
 export async function adminRoutes(app: FastifyInstance, ctx: AppContext) {
   const { db } = ctx;
-  const jobScope = () => `${manageSQL()} AND (j.revision_id IS NULL OR ${revisionManageSQL()})`;
   app.get('/api/admin/overview', async (req) => {
     staff(req);
     const counts = (
@@ -356,7 +360,7 @@ export async function adminRoutes(app: FastifyInstance, ctx: AppContext) {
     const from = `FROM moderation_jobs j LEFT JOIN revisions r ON r.id=j.revision_id LEFT JOIN comments cm ON cm.id=j.comment_id JOIN contents c ON c.id=COALESCE(r.content_id,cm.content_id) WHERE ${jobScope()} AND j.status ${status === 'done' ? "='done'" : "<>'done'"}`;
     return {
       items: await db.query(
-        `SELECT j.*,c.id content_id,c.type,r.data,r.status revision_status,cm.body comment_body,COALESCE((SELECT jsonb_agg(jsonb_build_object('id',a.id,'original_name',a.original_name,'kind',a.kind,'size',a.size,'scan_status',a.scan_status)) FROM comment_attachments ca JOIN attachments a ON a.id=ca.attachment_id WHERE ca.comment_id=cm.id AND NOT a.deleted),'[]'::jsonb) comment_files ${from} ORDER BY j.created_at DESC LIMIT $2 OFFSET $3`,
+        `SELECT j.*,c.id content_id,c.type,r.data,r.status revision_status,cm.body comment_body,COALESCE((SELECT jsonb_agg(jsonb_build_object('id',a.id,'original_name',a.original_name,'kind',a.kind,'mime',a.mime,'size',a.size,'scan_status',a.scan_status,'scan_reason',a.scan_reason,'deleted',a.deleted) ORDER BY a.created_at,a.id) FROM (SELECT attachment_id FROM revision_attachments WHERE revision_id=j.revision_id UNION SELECT attachment_id FROM comment_attachments WHERE comment_id=j.comment_id) bound JOIN attachments a ON a.id=bound.attachment_id),'[]'::jsonb) files ${from} ORDER BY j.created_at DESC LIMIT $2 OFFSET $3`,
         [req.user.id, limit, (page - 1) * limit],
       ),
       total: (await db.query(`SELECT count(*)::int total ${from}`, [req.user.id]))[0].total,

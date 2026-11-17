@@ -14,7 +14,10 @@ export async function socialRoutes(app: FastifyInstance, ctx: AppContext) {
       'INSERT INTO likes(content_id,user_id,active) VALUES($1,$2,$3) ON CONFLICT(content_id,user_id) DO UPDATE SET active=EXCLUDED.active',
       [cid, req.user.id, p.active],
     );
-    return { ok: true };
+    const metrics = (
+      await db.query('SELECT count(*)::int likes FROM likes WHERE content_id=$1 AND active', [cid])
+    )[0];
+    return { ok: true, metrics: { ...metrics, liked: p.active } };
   });
   app.put('/api/contents/:id/bookmark', async (req) => {
     const cid = identifier.parse((req.params as any).id);
@@ -30,7 +33,7 @@ export async function socialRoutes(app: FastifyInstance, ctx: AppContext) {
         cid,
         req.user.id,
       ]);
-    return { ok: true };
+    return { ok: true, metrics: { bookmarked: p.active } };
   });
   app.get('/api/contents/:id/comments', async (req) => {
     const cid = identifier.parse((req.params as any).id);

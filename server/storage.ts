@@ -5,8 +5,18 @@ import net from 'node:net';
 import { fileTypeFromBuffer } from 'file-type';
 import sharp from 'sharp';
 import yauzl from 'yauzl';
-import { type AppContext, id, hash, fail, identifier, siteSettings, admin, audit } from './core.js';
-import { getContent, canReadRevision, canManage } from './permissions.js';
+import {
+  type AppContext,
+  id,
+  hash,
+  fail,
+  identifier,
+  siteSettings,
+  admin,
+  staff,
+  audit,
+} from './core.js';
+import { getContent, canReadRevision, canManage, moderationJobScope } from './permissions.js';
 import { privateImageUnchanged } from './image-cache.js';
 export interface PrivateStorage {
   put(key: string, data: Buffer): Promise<void>;
@@ -168,6 +178,42 @@ export async function clamScan(
 export async function storageRoutes(app: FastifyInstance, ctx: AppContext) {
   const { db } = ctx,
     storage = new DiskStorage(path.join(ctx.dataDir, 'uploads'));
+  app.get('/api/admin/moderation/:jobId/files/:fileId', async (req, reply) => {
+    staff(req);
+    const jid = identifier.parse((req.params as any).jobId),
+      fid = identifier.parse((req.params as any).fileId);
+    const f = (
+      await db.query(
+        `SELECT a.* FROM moderation_jobs j LEFT JOIN revisions r ON r.id=j.revision_id LEFT JOIN comments cm ON cm.id=j.comment_id
+       JOIN contents c ON c.id=COALESCE(r.content_id,cm.content_id)
+       JOIN attachments a ON a.id=$3 AND a.content_id=c.id
+       WHERE j.id=$2 AND ${moderationJobScope()} AND NOT a.deleted AND c.state NOT IN ('deleted','withdrawn')
+       AND ((j.revision_id IS NOT NULL AND r.digest=j.digest AND c.latest_revision_id=r.id AND EXISTS(SELECT 1 FROM revision_attachments ra WHERE ra.revision_id=r.id AND ra.attachment_id=a.id))
+         OR (j.comment_id IS NOT NULL AND cm.digest=j.digest AND cm.status<>'deleted' AND EXISTS(SELECT 1 FROM comment_attachments ca WHERE ca.comment_id=cm.id AND ca.attachment_id=a.id)))`,
+        [req.user.id, jid, fid],
+      )
+    )[0];
+    if (!f) fail(404, '审核文件不存在或无权访问');
+    if (f.scan_status === 'blocked') fail(423, '文件已被阻止，请作者移除或重新上传');
+    let bytes: Buffer;
+    try {
+      bytes = await storage.get(f.storage_key);
+    } catch {
+      fail(404, '文件暂时不可用');
+    }
+    const inline = f.kind === 'image' && f.mime === 'image/webp';
+    if (!inline) await audit(db, req.user.id, 'file.review-download', fid, { jobId: jid });
+    return reply
+      .type(inline ? 'image/webp' : 'application/octet-stream')
+      .header('Cache-Control', 'private, no-store')
+      .header('Content-Security-Policy', "default-src 'none'; sandbox")
+      .header('X-Content-Type-Options', 'nosniff')
+      .header(
+        'Content-Disposition',
+        `${inline ? 'inline' : 'attachment'}; filename="review-file"; filename*=UTF-8''${encodeURIComponent(f.original_name)}`,
+      )
+      .send(bytes);
+  });
   app.get('/api/admin/files/:id/quarantine', async (req, reply) => {
     admin(req);
     const fid = identifier.parse((req.params as any).id),
@@ -193,7 +239,7 @@ export async function storageRoutes(app: FastifyInstance, ctx: AppContext) {
     app.post(route, async (req, reply) => {
       const cid = identifier.parse((req.params as any).id);
       const forComment = req.routeOptions.url === '/api/contents/:id/comment-files';
-      await getContent(db, req.user, cid, forComment ? 'published' : 'edit');
+      const content = await getContent(db, req.user, cid, forComment ? 'published' : 'edit');
       if (forComment) {
         const topic = (
           await db.query('SELECT locked FROM forum_topics WHERE content_id=$1', [cid])
@@ -290,8 +336,7 @@ export async function storageRoutes(app: FastifyInstance, ctx: AppContext) {
           extracted = parsed.text;
           uncertain = parsed.uncertain;
         } catch (error) {
-          uncertain = true;
-          extracted = '无法可靠解析附件：' + (error as Error).message;
+          fail(400, 'ZIP 结构无效或超出安全限制，请检查后重新上传');
         }
       } else {
         if (detected || buffer.includes(0)) fail(400, '文件实际类型不是纯文本');
@@ -311,7 +356,7 @@ export async function storageRoutes(app: FastifyInstance, ctx: AppContext) {
         mime = ext === 'json' ? 'application/json' : 'text/plain';
       }
       let scanStatus = 'review',
-        scanReason = '未配置恶意文件扫描，请由管理员离线检查后确认';
+        scanReason = '随正文提交审核时一并检查附件';
       if (ctx.provider === 'development' && !ctx.production) {
         scanStatus = 'clean';
         scanReason = '仅开发模拟扫描，不代表安全证明';
@@ -332,7 +377,24 @@ export async function storageRoutes(app: FastifyInstance, ctx: AppContext) {
       await storage.put(key, buffer);
       try {
         await db.transaction(async (tx) => {
-          await tx.query('SELECT id FROM users WHERE id=$1 FOR UPDATE', [req.user.id]);
+          // Stable lock order also covers an admin uploading to another author's draft.
+          const authors = await tx.query(
+            'SELECT id,active,must_reset,moderation_exempt FROM users WHERE id=$1 OR id=$2 ORDER BY id FOR UPDATE',
+            [req.user.id, forComment ? req.user.id : content.author_id],
+          );
+          const author = authors.find(
+            (u) => u.id === (forComment ? req.user.id : content.author_id),
+          );
+          const exempt =
+            author?.active &&
+            !author.must_reset &&
+            author.moderation_exempt &&
+            scanStatus !== 'blocked';
+          const previousStatus = scanStatus;
+          if (exempt) {
+            scanStatus = 'clean';
+            scanReason = '账号免审，附件直接可用';
+          }
           const used = Number(
             (
               await tx.query(
@@ -361,6 +423,13 @@ export async function storageRoutes(app: FastifyInstance, ctx: AppContext) {
               hash(buffer),
             ],
           );
+          if (exempt)
+            await audit(tx, author.id, 'file.exempt', fid, {
+              decision: 'clean',
+              reason: scanReason,
+              previousStatus,
+              uploadedBy: req.user.id,
+            });
         });
       } catch (e) {
         await storage.remove(key);

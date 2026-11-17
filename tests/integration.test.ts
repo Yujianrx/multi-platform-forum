@@ -708,8 +708,9 @@ describe('文件、下载与运营', () => {
     await expect(inspectZip(bomb)).rejects.toThrow();
     const c = await create('skill', {}, sessions.a, false);
     const r = await upload(c.cid, 'danger.zip', traversal);
-    expect(r.statusCode).toBe(201);
-    expect(r.json().scan_status).toBe('review');
+    expect(r.statusCode).toBe(400);
+    expect(r.json().error).toContain('ZIP 结构无效');
+    expect((await upload(c.cid, 'bomb.zip', bomb)).statusCode).toBe(400);
   });
   it('隔离附件阻止自动发布，人工通过同时放行绑定附件', async () => {
     const c = await create('skill', {}, sessions.a, false);

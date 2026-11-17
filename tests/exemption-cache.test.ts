@@ -1,5 +1,7 @@
 import { beforeAll, beforeEach, afterAll, test, expect } from 'vitest';
 import { mkdir, writeFile } from 'node:fs/promises';
+import sharp from 'sharp';
+import { zipSync, strToU8 } from 'fflate';
 import { openDatabase, migrate, type Database } from '../server/db';
 import { buildApp } from '../server/app';
 import { id, hash, passwordHash } from '../server/core';
@@ -134,6 +136,12 @@ test('普通账号仍排队；免审账号提交立即发布并跳过规则和�
     [id(), member.id],
   );
   const cid = await draft('project');
+  expect((await upload(cid, 'invalid.zip', Buffer.from('not a zip'))).statusCode).toBe(400);
+  expect(
+    (await upload(cid, 'traversal.zip', Buffer.from(zipSync({ '../bad.txt': strToU8('x') }))))
+      .statusCode,
+  ).toBe(400);
+  expect((await upload(cid, 'fake.png', Buffer.from('not an image'))).statusCode).toBe(400);
   const result = await submit(cid, {
     body: member.id + ' [dev:reject]',
     fields: { version: '2.0' },
@@ -215,19 +223,122 @@ test('免审同样适用于个人接口投稿且保持幂等', async () => {
   expect(second.json().replayed).toBe(true);
 });
 
-test('免审不放行未检查附件，文件通过前内容仍不可见', async () => {
+test('免审提交同步放行绑定附件，保留来源记录且不重复处理', async () => {
   await toggle(true);
   const cid = await draft(),
     fid = id();
   await db.query(
     "INSERT INTO attachments(id,content_id,owner_id,original_name,mime,size,storage_key,kind,scan_status) VALUES($1,$2,$3,'待检查.txt','text/plain',10,$4,'resource','review')",
-    [fid, cid, member.id, id()],
+    [fid, cid, member.id, fid],
   );
+  await mkdir(ctx.dataDir + '/uploads', { recursive: true });
+  await writeFile(ctx.dataDir + '/uploads/' + fid, 'test-file');
   const saved = await submit(cid, { attachments: [fid] });
-  expect(saved.json().status).toBe('review');
-  expect((await request('GET', '/api/contents/' + cid, undefined, other)).statusCode).toBe(404);
+  expect(saved.json().status).toBe('approved');
+  expect((await request('GET', '/api/contents/' + cid, undefined, other)).statusCode).toBe(200);
+  expect((await request('GET', '/api/files/' + fid, undefined, other)).body).toBe('test-file');
   expect(
     (await db.query('SELECT scan_status FROM attachments WHERE id=$1', [fid]))[0].scan_status,
+  ).toBe('clean');
+  await processJobs(ctx, new UnconfiguredProvider(), 100);
+  const logs = await db.query(
+    "SELECT details FROM audit_logs WHERE action='file.exempt' AND target=$1",
+    [fid],
+  );
+  expect(logs).toHaveLength(1);
+  expect(logs[0].details.reason).toContain('免审');
+});
+
+async function upload(cid: string, name: string, buffer: Buffer, comment = false, who = member) {
+  const boundary = 'Exemption' + id();
+  return request(
+    'POST',
+    `/api/contents/${cid}/${comment ? 'comment-files' : 'files'}`,
+    Buffer.concat([
+      Buffer.from(
+        `--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="${name}"\r\nContent-Type: application/octet-stream\r\n\r\n`,
+      ),
+      buffer,
+      Buffer.from(`\r\n--${boundary}--\r\n`),
+    ]),
+    who,
+    { 'content-type': 'multipart/form-data; boundary=' + boundary },
+  );
+}
+
+test('免审上传图片和 PDF 可直接使用，回复附件亦免审，关闭后新提交仍待审', async () => {
+  await toggle(true);
+  const cid = await draft('project');
+  const pdf = Buffer.from('%PDF-1.4\n1 0 obj\n<< /Type /Catalog >>\nendobj\n%%EOF');
+  const picture = await sharp({ create: { width: 8, height: 8, channels: 3, background: '#c22' } })
+    .png()
+    .toBuffer();
+  const image = await upload(cid, 'cover.png', picture),
+    file = await upload(cid, 'guide.pdf', pdf);
+  for (const r of [image, file]) {
+    expect(r.statusCode, r.body).toBe(201);
+    expect(r.json().scan_status).toBe('clean');
+    expect(r.json().scan_reason).toContain('免审');
+  }
+  expect((await request('GET', '/api/files/' + image.json().id)).statusCode).toBe(200);
+  expect((await request('GET', '/api/files/' + image.json().id, undefined, other)).statusCode).toBe(
+    404,
+  );
+  expect(
+    (await submit(cid, { coverId: image.json().id, attachments: [file.json().id] })).json().status,
+  ).toBe('approved');
+  const replyFile = await upload(cid, 'reply.pdf', pdf, true);
+  const reply = await request('POST', `/api/contents/${cid}/comments`, {
+    body: '补充使用说明',
+    attachments: [replyFile.json().id],
+  });
+  expect(reply.statusCode, reply.body).toBe(201);
+  expect(reply.json().status).toBe('approved');
+  expect(
+    (await request('GET', '/api/files/' + replyFile.json().id, undefined, other)).statusCode,
+  ).toBe(200);
+  // A moderator editing someone else's draft cannot apply their own exemption to it.
+  await request('PATCH', '/api/admin/users/' + admin.id, {
+    role: 'admin',
+    active: true,
+    departmentId: department,
+    moderationExempt: true,
+  });
+  const uploadedWhileExempt = await draft();
+  const previousFile = await upload(uploadedWhileExempt, 'before-disable.pdf', pdf);
+  expect(previousFile.json().scan_status).toBe('clean');
+  await toggle(false);
+  expect(
+    (await submit(uploadedWhileExempt, { attachments: [previousFile.json().id] })).json().status,
+  ).toBe('queued');
+  const pendingCid = await draft();
+  const pending = await upload(pendingCid, 'ordinary.pdf', pdf, false, admin);
+  expect(pending.json().scan_status).toBe('review');
+  expect((await submit(pendingCid, { attachments: [pending.json().id] })).json().status).toBe(
+    'queued',
+  );
+  expect((await upload(pendingCid, 'fake.png', Buffer.from('not an image'))).statusCode).toBe(400);
+});
+
+test('免审不解除明确阻止的文件，也不放行未绑定的文件', async () => {
+  await toggle(true);
+  const cid = await draft(),
+    blocked = id(),
+    unrelated = id();
+  for (const [fid, status] of [
+    [blocked, 'blocked'],
+    [unrelated, 'review'],
+  ])
+    await db.query(
+      "INSERT INTO attachments(id,content_id,owner_id,original_name,mime,size,storage_key,kind,scan_status) VALUES($1,$2,$3,'文件.txt','text/plain',10,$1,'resource',$4)",
+      [fid, cid, member.id, status],
+    );
+  expect((await submit(cid, { attachments: [blocked] })).statusCode).toBe(400);
+  expect(
+    (await db.query('SELECT scan_status FROM attachments WHERE id=$1', [blocked]))[0].scan_status,
+  ).toBe('blocked');
+  expect(
+    (await db.query('SELECT scan_status FROM attachments WHERE id=$1', [unrelated]))[0].scan_status,
   ).toBe('review');
 });
 
