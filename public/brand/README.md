@@ -1,6 +1,12 @@
-# 小鱼号品牌素材
+# 论坛默认素材
 
-- `xiaoyu-logo.svg`：来自用户提供的 `文字logo.pdf`，原生矢量路径直接导出，按路径边界裁切画布；透明背景，未重绘字形。
-- `xiaoyu-mascot.png`：用户提供的 `ChatGPT 图像 2026年10月26日 15_51_47.png` 原文件，保留原尺寸与透明通道。
+- `forum-logo.svg`：透明对话气泡与 FORUM 标识。
+- `forum-illustration.svg`：登录页的抽象交流插画。
+- `forum-banners/`：3:1 经验交流、项目协作与资源分享横幅；左侧预留实时文字，右侧为主题插画。
+- `ui-red/`：通用操作、编辑与管理图标和按钮底图。
+- `badges/`：贡献勋章图片，业务条件见 `docs/HONORS.md`。
+- `optimized/`：自动生成的轻量素材与体积清单，文件名包含内容哈希。
 
-原 LOGO 用于页头与登录页，原人物 PNG 用于登录页。`banners/` 中的三张横幅通过内置 image_gen 以原人物为角色参考生成，用于首页图片轮播与论坛主视觉；提示词见 `banners/PROMPTS.md`。LOGO 字形保持不变。
+运行 `npm run assets:optimize` 更新网页映射、样式以及 `wechat/miniprogram/assets/` 中的 LOGO 和轮播；`npm run build` 自动执行相同步骤。修改源图后应同时提交生成结果，不手工改哈希映射。
+
+默认素材无企业名称与人物。管理员上传的站点 LOGO 与轮播优先显示，保存在鉴权存储中，不随源码分发。

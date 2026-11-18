@@ -386,5 +386,5 @@ test('只有带哈希静态资源长期缓存，页面及原始素材保持重�
   ).toContain('immutable');
   expect(staticCacheControl('E:/app/dist/client/assets/index-Abc123.js')).toContain('immutable');
   expect(staticCacheControl('E:/app/dist/client/index.html')).toBe('no-cache');
-  expect(staticCacheControl('E:/app/public/brand/banners-clean/experience.png')).toBe('no-cache');
+  expect(staticCacheControl('E:/app/public/brand/forum-banners/experience.svg')).toBe('no-cache');
 });

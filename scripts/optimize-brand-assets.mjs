@@ -22,8 +22,8 @@ async function encode(name, source, width, quality = 86) {
   return { src: await output(name, bytes, 'webp'), bytes };
 }
 const assets = {
-  mascot: (await encode('mascot', 'xiaoyu-mascot.png', 768, 88)).src,
-  logo: await output('logo', await readFile(new URL('public/brand/xiaoyu-logo.svg', root)), 'svg'),
+  illustration: (await encode('illustration', 'forum-illustration.svg', 768, 88)).src,
+  logo: await output('logo', await readFile(new URL('public/brand/forum-logo.svg', root)), 'svg'),
   atlases: {},
   banners: {},
 };
@@ -36,10 +36,16 @@ for (const [name, columns] of [
   assets.atlases[name] = (await encode(name, `ui-red/${name}.png`, columns * 128, 90)).src;
 for (const name of ['experience', 'projects', 'skills'])
   assets.banners[name] = {
-    src: (await encode(name, `banners-clean/${name}.png`, 2172, 85)).src,
-    small: (await encode(name + '-small', `banners-clean/${name}.png`, 1086, 85)).src,
+    src: (await encode(name, `forum-banners/${name}.svg`, 2172, 85)).src,
+    small: (await encode(name + '-small', `forum-banners/${name}.svg`, 1086, 85)).src,
   };
 const buttons = await encode('buttons', 'ui-red/buttons.png', 864, 92);
+// The mini program shares the same neutral identity and lightweight banners.
+const miniAssets = new URL('wechat/miniprogram/assets/', root);
+await mkdir(miniAssets, { recursive: true });
+await writeFile(new URL('logo.png', miniAssets), await sharp(await readFile(new URL('public/brand/forum-logo.svg', root))).png().toBuffer());
+for (const [name, filename] of [['experience', 'home-banner.webp'], ['projects', 'projects-banner.webp'], ['skills', 'skills-banner.webp']])
+  await writeFile(new URL(filename, miniAssets), await readFile(new URL('public' + assets.banners[name].small, root)));
 assets.buttonAtlas = buttons.src;
 const views = [
   ['primary', 0, 0],

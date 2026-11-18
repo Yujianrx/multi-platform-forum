@@ -1,13 +1,14 @@
 const https = require('node:https');
 const cloud = require('wx-server-sdk');
 const { communityApi } = require('./community-api');
+const { communityOrigin } = require('./config');
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 
 function exchange(payload, secret) {
   return new Promise((resolve, reject) => {
     const body = JSON.stringify(payload);
-    const request = https.request('https://ai.yujianrx.top/api/mini/bridge', {
+    const request = https.request(communityOrigin() + '/api/mini/bridge', {
       method: 'POST',
       timeout: 7000,
       headers: {
@@ -41,6 +42,7 @@ function exchange(payload, secret) {
 }
 
 exports.main = async (event) => {
+  try { communityOrigin(); } catch { return { error: '请配置云函数 COMMUNITY_ORIGIN 为论坛 HTTPS 地址' }; }
   const { APPID, OPENID } = cloud.getWXContext();
   const { MINIPROGRAM_APP_ID, MINIPROGRAM_BRIDGE_SECRET } = process.env;
   if (!OPENID || !APPID || APPID !== MINIPROGRAM_APP_ID || !MINIPROGRAM_BRIDGE_SECRET)

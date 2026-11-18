@@ -1,7 +1,7 @@
 const https = require('node:https');
 const { randomBytes } = require('node:crypto');
 
-const origin = 'https://ai.yujianrx.top';
+const { communityOrigin } = require('./config');
 const maxFile = 700 * 1024;
 const maxJson = 900 * 1024;
 const uuid = '[0-9a-f-]{36}';
@@ -19,7 +19,7 @@ const publicAuth = new Map([
 function prepare(event) {
   if (typeof event.path !== 'string' || event.path.length > 1800 ||
       !/^\/api\/[a-zA-Z0-9/-]+(?:\?[^#\r\n]*)?$/.test(event.path)) return;
-  const url = new URL(event.path, origin);
+  const url = new URL(event.path, communityOrigin());
   const { method } = event;
   const path = url.pathname;
   const anonymous = publicAuth.get(path) === method;
@@ -96,6 +96,8 @@ function upstream(input) {
 }
 
 async function communityApi(event) {
+  try { communityOrigin(); }
+  catch { return { statusCode: 503, data: { error: '请配置云函数 COMMUNITY_ORIGIN 为论坛 HTTPS 地址' } }; }
   const input = prepare(event);
   if (!input) return { statusCode: 403, data: { error: '小程序不支持此操作' } };
   try { return await upstream(input); }

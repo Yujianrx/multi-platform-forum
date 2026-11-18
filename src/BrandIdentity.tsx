@@ -7,9 +7,9 @@ export function BrandIdentity({ site, publicView = false }: { site: any; publicV
       ) : site.logo ? (
         <span className="brand-mark">{site.logo}</span>
       ) : (
-        <img className="brand-wordmark" src={brandAssets.logo} alt="小鱼号" />
+        <img className="brand-wordmark" src={brandAssets.logo} alt="多端论坛" />
       )}
-      <span className="brand-title">{site.name || '小鱼号AI共创社区'}</span>
+      <span className="brand-title">{site.name || '多端论坛'}</span>
     </>
   );
 }

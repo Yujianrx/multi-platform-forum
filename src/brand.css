@@ -23,7 +23,7 @@
 .desktop-nav > a {
   white-space: nowrap;
 }
-.hero-art > .hero-mascot {
+.hero-art > .hero-illustration {
   width: 92%;
   height: 92%;
   position: absolute;
@@ -136,7 +136,7 @@
 .login-story-copy {
   margin-top: 35px;
 }
-.login-story-copy .login-mascot {
+.login-story-copy .login-illustration {
   display: block;
   width: min(340px, 80%);
   height: auto;
@@ -200,17 +200,17 @@
   .detail-main > .forum-preview {
     margin: 20px 0;
   }
-  .hero-art:has(> .hero-mascot) {
+  .hero-art:has(> .hero-illustration) {
     display: block;
     min-height: 205px;
   }
-  .hero-art > .hero-mascot {
+  .hero-art > .hero-illustration {
     width: 205px;
     height: 205px;
     left: auto;
     right: 12px;
   }
-  .login-story-copy .login-mascot {
+  .login-story-copy .login-illustration {
     width: 190px;
     margin: 15px auto 0;
   }
@@ -232,11 +232,11 @@
 }
 
 @media (max-width: 760px) {
-  .hero:has(.hero-mascot) .hero-copy {
+  .hero:has(.hero-illustration) .hero-copy {
     max-width: 100%;
     padding-bottom: 12px;
   }
-  .hero-art:has(> .hero-mascot) {
+  .hero-art:has(> .hero-illustration) {
     position: relative;
     right: auto;
     bottom: auto;
@@ -244,7 +244,7 @@
     min-height: 180px;
     opacity: 1;
   }
-  .hero-art > .hero-mascot {
+  .hero-art > .hero-illustration {
     width: 190px;
     height: 190px;
     right: 22px;

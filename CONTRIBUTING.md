@@ -23,7 +23,7 @@
 
 ## 标签
 
-在 [Issues / Pull requests 标签](https://github.com/Yujianrx/-/labels) 中选择实际涉及的模块和变更类型，可选多个模块，不需要为无关模块贴标签。
+在 [Issues / Pull requests 标签](https://github.com/Yujianrx/multi-platform-forum/labels) 中选择实际涉及的模块和变更类型，可选多个模块，不需要为无关模块贴标签。
 
 | 模块标签 | 范围 |
 | --- | --- |

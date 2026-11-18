@@ -90,8 +90,8 @@ test('轮播自定义图片、内容与外部链接、图片失败回退和空�
     imageFails
       ? route.fulfill({ status: 404 })
       : route.fulfill({
-          contentType: 'image/png',
-          body: readFileSync('public/brand/banners-clean/projects.png'),
+          contentType: 'image/svg+xml',
+          body: readFileSync('public/brand/forum-banners/projects.svg'),
         }),
   );
   await page.reload();

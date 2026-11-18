@@ -51,7 +51,7 @@ export default function App() {
     return () => document.documentElement.classList.remove('mobile-app');
   }, [mobile]);
   const [user, setUser] = useState<User | null>(null),
-    [site, setSite] = useState<any>({ name: '小鱼号AI共创社区' }),
+    [site, setSite] = useState<any>({ name: '多端论坛' }),
     [loading, setLoading] = useState(true),
     [error, setError] = useState(''),
     [notice, setNotice] = useState<{ message: string; error?: boolean } | null>(null),
@@ -83,7 +83,7 @@ export default function App() {
     return () => window.removeEventListener('session-expired', expired);
   }, [refresh]);
   useEffect(() => {
-    document.title = site.name || '小鱼号AI共创社区';
+    document.title = site.name || '多端论坛';
   }, [site]);
   useEffect(() => {
     window.scrollTo(0, 0);

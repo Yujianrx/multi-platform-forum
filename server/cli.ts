@@ -59,7 +59,7 @@ try {
     await writeFile('work/dev-credentials.json', JSON.stringify(access, null, 2));
     await writeFile(
       'outputs/本地访问说明.txt',
-      `AI 共创社区 · 本地开发访问\n\n地址：http://127.0.0.1:3000\n管理员账号：admin\n开发示例密码：${access.password}\n\n其他示例账号：lin.xia（设计部）、chen.yu（研发中心）、zhou.ning（营运中心）\n上述示例账号使用同一随机开发密码。\n\n开发邀请码（营运中心，7 天有效）：${access.inviteCode}\n\n此文件仅供本地开发。请勿用于生产或上传至公共仓库。生产使用 npm run admin:init 安全初始化。\n启动：npm run dev\n`,
+      `多端论坛 · 本地开发访问\n\n地址：http://127.0.0.1:3000\n管理员账号：admin\n开发示例密码：${access.password}\n\n其他示例账号：lin.xia（设计部）、chen.yu（研发中心）、zhou.ning（营运中心）\n上述示例账号使用同一随机开发密码。\n\n开发邀请码（营运中心，7 天有效）：${access.inviteCode}\n\n此文件仅供本地开发。请勿用于生产或上传至公共仓库。生产使用 npm run admin:init 安全初始化。\n启动：npm run dev\n`,
       'utf8',
     );
     console.log('已生成开发数据。随机账号与邀请码已写入 outputs/本地访问说明.txt（未写入源码）。');

@@ -1,8 +1,8 @@
 [
   {
-    "name": "mascot",
-    "originalBytes": 1193469,
-    "optimizedBytes": 85196
+    "name": "illustration",
+    "originalBytes": 1209,
+    "optimizedBytes": 13920
   },
   {
     "name": "community",
@@ -26,33 +26,33 @@
   },
   {
     "name": "experience",
-    "originalBytes": 1427073,
-    "optimizedBytes": 50632
+    "originalBytes": 1166,
+    "optimizedBytes": 10466
   },
   {
     "name": "experience-small",
-    "originalBytes": 1427073,
-    "optimizedBytes": 20524
+    "originalBytes": 1166,
+    "optimizedBytes": 4590
   },
   {
     "name": "projects",
-    "originalBytes": 1427727,
-    "optimizedBytes": 46228
+    "originalBytes": 1194,
+    "optimizedBytes": 11816
   },
   {
     "name": "projects-small",
-    "originalBytes": 1427727,
-    "optimizedBytes": 18708
+    "originalBytes": 1194,
+    "optimizedBytes": 5496
   },
   {
     "name": "skills",
-    "originalBytes": 1513727,
-    "optimizedBytes": 58892
+    "originalBytes": 1038,
+    "optimizedBytes": 10530
   },
   {
     "name": "skills-small",
-    "originalBytes": 1513727,
-    "optimizedBytes": 24070
+    "originalBytes": 1038,
+    "optimizedBytes": 4582
   },
   {
     "name": "buttons",

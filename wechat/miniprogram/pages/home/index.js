@@ -2,7 +2,7 @@ const { pager, contentCard, types, listState, selectTab, searchActions } = requi
 const { signIn, accountSignIn, getCaptcha, origin } = require('../../lib/api');
 const feedTypes = types.slice(0, 4).map((type, index) => ({ ...type, short: ['经验', '项目', '技能包', '提示词'][index] }));
 const banners = [
-  { type: 'experience', image: '/assets/home-banner.webp', title: '把 AI 用进日常，把好经验分享出来。' },
+  { type: 'experience', image: '/assets/home-banner.webp', title: '把好经验分享出来，让讨论更有收获。' },
   { type: 'project', image: '/assets/projects-banner.webp', title: '让好想法，长成好项目。' },
   { type: 'skill', image: '/assets/skills-banner.webp', title: '少一点重复，多一点创造。' },
 ];

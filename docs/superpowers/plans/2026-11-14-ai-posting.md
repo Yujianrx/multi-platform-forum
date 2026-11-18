@@ -1,6 +1,6 @@
 # AI Posting Implementation Plan
 
-**Goal:** Deploy personal API keys and reviewed AI submissions to ai.yujianrx.top.
+**Goal:** Deploy personal API keys and reviewed AI submissions to forum.example.com.
 **Architecture:** Existing Fastify/PGlite/PostgreSQL stack; narrowly scoped Bearer routes reuse the website revision transaction. React profile provides key management; static OpenAPI document describes the contract.
 **Spec:** docs/plans/2026-11-14-ai-posting-design.md
 

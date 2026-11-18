@@ -1,13 +1,13 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "AI 共创社区投稿接口",
+    "title": "多端论坛投稿接口",
     "version": "1.0.0",
     "description": "个人密钥投稿，沿用账号审核设置；管理员开启账号免审后直接发布。第一版只接收文字与 Markdown。密钥仅限服务端使用。每分钟20次、24小时100篇。"
   },
   "servers": [
     {
-      "url": "https://ai.yujianrx.top/api/open/v1"
+      "url": "/api/open/v1"
     }
   ],
   "security": [

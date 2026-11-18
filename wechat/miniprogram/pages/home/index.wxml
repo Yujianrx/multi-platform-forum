@@ -2,8 +2,8 @@
   <view class="login-hero">
     <image class="hero-art" mode="aspectFill" src="/assets/home-banner.webp" aria-hidden="true"/>
     <view class="hero-copy">
-      <image mode="aspectFit" src="/assets/logo.png" aria-label="小鱼号"/>
-      <text class="title">小鱼号 AI 共创社区</text>
+      <image mode="aspectFit" src="/assets/logo.png" aria-label="多端论坛"/>
+      <text class="title">多端论坛</text>
     </view>
   </view>
   <view class="panel stack auth-panel">
@@ -50,8 +50,8 @@
 <view class="page tab-page feed" wx:else>
   <view class="home-header">
     <view class="brand-lockup">
-      <image class="brand-mark" src="/assets/logo.png" mode="aspectFit" aria-label="小鱼号"/>
-      <text>AI 共创社区</text>
+      <image class="brand-mark" src="/assets/logo.png" mode="aspectFit" aria-label="多端论坛"/>
+      <text>多端论坛</text>
     </view>
     <view class="home-channels" role="tablist" aria-label="内容频道">
       <view class="channel {{channel === 'latest' ? 'active' : ''}}" bindtap="filter" data-key="channel" data-value="latest" role="tab" aria-selected="{{channel === 'latest'}}">最新</view>

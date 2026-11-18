@@ -100,12 +100,12 @@ export function Login({ site, onLogin }: { site: any; onLogin: () => Promise<voi
             在这里，找到灵感、伙伴与下一次突破。
           </p>
           <img
-            className="login-mascot"
-            src={brandAssets.mascot}
+            className="login-illustration"
+            src={brandAssets.illustration}
             width={768}
             height={768}
             decoding="async"
-            alt="小鱼号共创伙伴"
+            alt="论坛交流插画"
           />
         </div>
         <small className="login-bottom">专属内部空间 · 让知识在团队中流动</small>
@@ -115,7 +115,7 @@ export function Login({ site, onLogin }: { site: any; onLogin: () => Promise<voi
         <div className="login-form-wrap">
           <span className="login-welcome">
             <Sparkles size={20} />
-            欢迎来到共创空间
+            欢迎来到论坛
           </span>
           <h2>
             {mode === 'login'
@@ -126,9 +126,9 @@ export function Login({ site, onLogin }: { site: any; onLogin: () => Promise<voi
           </h2>
           <p className="muted">
             {mode === 'login'
-              ? '登录后，发现同事们的 AI 新实践。'
+              ? '登录后，发现大家分享的经验与讨论。'
               : mode === 'register'
-                ? '使用管理员提供的邀请码，加入公司内部社区。'
+                ? '使用管理员提供的邀请码，加入社区。'
                 : '输入管理员提供的一次性凭证，有效期 30 分钟。'}
           </p>
           {mode !== 'reset' && (

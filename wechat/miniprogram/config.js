@@ -1,4 +1,5 @@
 module.exports = {
-  origin: 'https://ai.yujianrx.top',
-  cloudEnv: 'cloud1-d5g26cy701a189c0a',
+  // Set these to your own deployment before enabling login.
+  origin: 'https://forum.example.com',
+  cloudEnv: '',
 };

@@ -1,7 +1,7 @@
 {
   "pages": ["pages/home/index", "pages/forum/index", "pages/messages/index", "pages/mine/index", "pages/detail/index", "pages/edit/index", "pages/rankings/index"],
   "window": {
-    "navigationBarTitleText": "小鱼号AI共创社区",
+    "navigationBarTitleText": "多端论坛",
     "navigationBarBackgroundColor": "#ffffff",
     "navigationBarTextStyle": "black",
     "backgroundColor": "#f8f5f6",

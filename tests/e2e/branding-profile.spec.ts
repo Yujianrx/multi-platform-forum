@@ -7,14 +7,14 @@ const noOverflow = async (page: Page) =>
     true,
   );
 
-test('小鱼号品牌和人物在登录与首页展示，首页左右两栏从轮播下方对齐', async ({ page }) => {
+test('论坛标识和插画在登录与首页展示，首页左右两栏从轮播下方对齐', async ({ page }) => {
   await page.goto('/');
   const publicSite = await (await page.request.get('/api/public')).json();
   await expect(page.locator('.brand-title')).toHaveText(publicSite.name);
   await expect(page.locator('.brand-wordmark')).toHaveJSProperty('complete', true);
-  await expect(page.locator('.login-mascot')).toBeVisible();
-  await expect(page.locator('.login-mascot')).toHaveJSProperty('naturalWidth', 768);
-  await page.screenshot({ path: 'outputs/小鱼号社区-登录页.png', fullPage: true });
+  await expect(page.locator('.login-illustration')).toBeVisible();
+  await expect(page.locator('.login-illustration')).toHaveJSProperty('naturalWidth', 768);
+  await page.screenshot({ path: 'outputs/多端论坛-登录页.png', fullPage: true });
   await loginAs(page);
   await expect(page.locator('.carousel-image')).toBeVisible();
   await expect(page.locator('.carousel-image')).toHaveJSProperty('complete', true);
@@ -33,10 +33,10 @@ test('小鱼号品牌和人物在登录与首页展示，首页左右两栏从�
     await noOverflow(page);
   }
   await page.setViewportSize({ width: 1440, height: 1050 });
-  await page.screenshot({ path: 'outputs/小鱼号社区-首页.png' });
+  await page.screenshot({ path: 'outputs/多端论坛-首页.png' });
   await page.setViewportSize({ width: 390, height: 844 });
   await noOverflow(page);
-  await page.screenshot({ path: 'outputs/小鱼号社区-手机首页.png' });
+  await page.screenshot({ path: 'outputs/多端论坛-手机首页.png' });
 });
 
 test('四种内容导航只有当前一项选中，查询参数和后退不误激活其他项', async ({ page }) => {
@@ -76,7 +76,7 @@ test('四类内容的正文、关联讨论和评论边缘一致，手机无横�
     }
   }
   await page.locator('.detail-main > .forum-preview').scrollIntoViewIfNeeded();
-  await page.screenshot({ path: 'outputs/小鱼号社区-讨论对齐.png' });
+  await page.screenshot({ path: 'outputs/多端论坛-讨论对齐.png' });
   await page.setViewportSize({ width: 390, height: 844 });
   await noOverflow(page);
 });
@@ -102,7 +102,7 @@ test('头像选择预览、取消、保存后在页头/作者/帖子/评论同�
   await expect(page.locator('.profile-link .avatar img')).toHaveJSProperty('naturalWidth', 256);
   await page.reload();
   await expect(page.locator('.profile-hero .avatar img')).toHaveJSProperty('naturalWidth', 256);
-  await page.screenshot({ path: 'outputs/小鱼号社区-个人头像.png' });
+  await page.screenshot({ path: 'outputs/多端论坛-个人头像.png' });
   await page.goto('/author/' + me.id);
   await expect(page.locator('.profile-hero .avatar img')).toBeVisible();
   const content = (

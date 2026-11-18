@@ -17,7 +17,7 @@ const defaults: CarouselBanner[] = [
   {
     id: 'experience',
     type: 'experience',
-    title: '把 AI 用进日常，把好经验分享出来。',
+    title: '把好经验分享出来，让讨论更有收获。',
     description: '分享真实实践，让每一个好方法被更多人看见。',
     href: '/explore?type=experience',
   },
@@ -25,7 +25,7 @@ const defaults: CarouselBanner[] = [
     id: 'project',
     type: 'project',
     title: '让好想法，长成好项目。',
-    description: '从一个灵感开始，和同事一起把它变成现实。',
+    description: '从一个灵感开始，和大家一起把它变成现实。',
     href: '/explore?type=project',
   },
   {
