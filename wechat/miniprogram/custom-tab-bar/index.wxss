@@ -1,0 +1,35 @@
+.tab-bar {
+  position: fixed;
+  z-index: 3;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: #fff;
+  border-top: 1px solid #eee4e8;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.tab-inner { display: flex; max-width: 720px; margin: 0 auto; }
+.tab-button {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  height: 55px;
+  margin: 0;
+  padding: 4px 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #74636d;
+  font-size: 11px;
+  line-height: 1.2;
+}
+.tab-button::after { border: 0; }
+.tab-button.active { color: #d9283c; font-weight: 700; }
+.tab-button-hover { background: #fbf0f2; }
+.tab-icon { display: block; width: 23px; height: 23px; }
+.publish-mark { position: relative; width: 44px; height: 34px; border-radius: 10px; background: #e72b3a; }
+.publish-mark::before, .publish-mark::after { position: absolute; top: 50%; left: 50%; width: 16px; height: 2px; transform: translate(-50%, -50%); border-radius: 2px; background: white; content: ""; }
+.publish-mark::after { transform: translate(-50%, -50%) rotate(90deg); }

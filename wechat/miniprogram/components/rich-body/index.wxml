@@ -1,0 +1,7 @@
+<view class="body">
+  <block wx:for="{{display}}" wx:key="key">
+    <rich-text wx:if="{{item.html}}" nodes="{{item.html}}" />
+    <image wx:elif="{{item.sticker}}" class="body-sticker" mode="aspectFit" src="{{'/assets' + item.path}}" aria-label="{{item.alt}}"/>
+    <private-image wx:elif="{{item.path}}" class="body-image" mode="widthFix" label="{{item.alt}}" path="{{item.path}}" />
+  </block>
+</view>

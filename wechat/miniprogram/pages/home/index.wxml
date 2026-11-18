@@ -1,0 +1,89 @@
+<view class="page tab-page stack auth-page" wx:if="{{!signedIn}}">
+  <view class="login-hero">
+    <image class="hero-art" mode="aspectFill" src="/assets/home-banner.webp" aria-hidden="true"/>
+    <view class="hero-copy">
+      <image mode="aspectFit" src="/assets/logo.png" aria-label="小鱼号"/>
+      <text class="title">小鱼号 AI 共创社区</text>
+    </view>
+  </view>
+  <view class="panel stack auth-panel">
+    <block wx:if="{{!authMode}}">
+      <button class="primary" open-type="getPhoneNumber" bindgetphonenumber="authorizePhone" loading="{{signingIn}}" disabled="{{signingIn}}">微信手机号登录</button>
+      <view class="row auth-buttons"><button class="grow" bindtap="changeAuthMode" data-mode="login">账号登录</button><button class="grow" bindtap="changeAuthMode" data-mode="register">邀请码注册</button></view>
+      <button class="ghost" bindtap="authenticate" data-action="begin" disabled="{{signingIn}}">已绑定微信登录</button>
+    </block>
+    <block wx:elif="{{authMode === 'pair'}}">
+      <text class="heading">绑定原账号</text>
+      <text class="muted">在社区网页输入配对码，5 分钟内有效。</text>
+      <button class="secondary code" bindtap="copyCode" aria-label="复制配对码">{{code}}</button>
+      <button class="primary" bindtap="authenticate" data-action="exchange" loading="{{signingIn}}" disabled="{{signingIn}}">已绑定，进入社区</button>
+      <view class="row auth-buttons"><button class="grow" bindtap="copyAddress">复制绑定地址</button><button class="grow" bindtap="authenticate" data-action="begin" disabled="{{signingIn}}">重新获取配对码</button></view>
+    </block>
+    <block wx:else>
+      <text class="heading">{{authMode === 'login' ? '账号登录' : '邀请码注册'}}</text>
+      <form class="stack" bindsubmit="submitAccount">
+        <label wx:if="{{authMode === 'register'}}"><text class="field-label">姓名</text><input class="input" name="name" placeholder="输入姓名" maxlength="50" disabled="{{signingIn}}"/></label>
+        <label><text class="field-label">账号</text><input class="input" name="username" placeholder="输入社区账号" maxlength="40" disabled="{{signingIn}}"/></label>
+        <label><text class="field-label">密码</text><input class="input" name="password" placeholder="输入密码" password maxlength="{{authMode === 'login' ? 128 : 20}}" disabled="{{signingIn}}"/></label>
+        <block wx:if="{{authMode === 'register'}}">
+          <label><text class="field-label">确认密码</text><input class="input" name="confirmPassword" placeholder="再次输入密码" password maxlength="20" disabled="{{signingIn}}"/></label>
+          <label><text class="field-label">邀请码</text><input class="input" name="invite" placeholder="输入邀请码" maxlength="200" disabled="{{signingIn}}"/></label>
+        </block>
+        <view wx:else>
+          <text class="field-label">图片验证码</text>
+          <view class="row">
+            <input class="input grow" name="captchaCode" value="{{captchaCode}}" bindinput="captchaInput" placeholder="输入验证码" aria-label="图片验证码" maxlength="4" disabled="{{signingIn}}"/>
+            <button class="captcha-button" bindtap="refreshCaptcha" disabled="{{loadingCaptcha || signingIn}}" aria-label="换一张验证码">
+              <image wx:if="{{captcha}}" class="captcha" src="{{captcha}}" mode="aspectFit"/>
+              <text wx:else>{{loadingCaptcha ? '加载中' : '获取验证码'}}</text>
+            </button>
+          </view>
+        </view>
+        <text class="notice error" wx:if="{{authError}}" aria-live="polite">{{authError}}</text>
+        <button class="primary" form-type="submit" loading="{{signingIn}}" disabled="{{signingIn || (authMode === 'login' && loadingCaptcha)}}">{{authMode === 'login' ? '登录' : '注册并登录'}}</button>
+      </form>
+    </block>
+    <text class="notice error" wx:if="{{authError && (!authMode || authMode === 'pair')}}" aria-live="polite">{{authError}}</text>
+    <button class="ghost" wx:if="{{authMode}}" bindtap="changeAuthMode" disabled="{{signingIn}}">返回登录选项</button>
+  </view>
+</view>
+<view class="page tab-page feed" wx:else>
+  <view class="home-header">
+    <view class="brand-lockup">
+      <image class="brand-mark" src="/assets/logo.png" mode="aspectFit" aria-label="小鱼号"/>
+      <text>AI 共创社区</text>
+    </view>
+    <view class="home-channels" role="tablist" aria-label="内容频道">
+      <view class="channel {{channel === 'latest' ? 'active' : ''}}" bindtap="filter" data-key="channel" data-value="latest" role="tab" aria-selected="{{channel === 'latest'}}">最新</view>
+      <view class="channel {{channel === 'featured' ? 'active' : ''}}" bindtap="filter" data-key="channel" data-value="featured" role="tab" aria-selected="{{channel === 'featured'}}">精选</view>
+      <view class="channel" bindtap="rankings" role="button">榜单</view>
+    </view>
+    <view class="home-search-toggle" bindtap="showSearch" hover-class="row-pressed" role="button" aria-label="搜索社区"><view class="search-icon"></view></view>
+  </view>
+  <view class="row home-search-panel" wx:if="{{searchOpen}}">
+    <input class="input grow" placeholder="搜索社区内容" maxlength="100" focus="{{searchOpen}}" value="{{searchTerm}}" bindinput="searchInput" confirm-type="search" bindconfirm="search"/>
+    <button class="ghost compact" bindtap="closeSearch">关闭</button>
+  </view>
+  <view class="home-categories">
+    <scroll-view scroll-x class="pills" enhanced show-scrollbar="{{false}}">
+      <view class="category-tabs" role="tablist" aria-label="内容类型">
+        <view class="category-tab {{!type ? 'active' : ''}}" bindtap="filter" data-key="type" data-value="" role="tab" aria-selected="{{!type}}">全部</view>
+        <view class="category-tab {{type === item.value ? 'active' : ''}}" wx:for="{{types}}" wx:key="value" bindtap="filter" data-key="type" data-value="{{item.value}}" role="tab" aria-selected="{{type === item.value}}">{{item.short}}</view>
+      </view>
+    </scroll-view>
+  </view>
+  <view class="banner-band" wx:if="{{!query}}">
+    <swiper class="brand-carousel" indicator-dots indicator-color="rgba(164,92,91,.25)" indicator-active-color="#c75462" circular>
+      <swiper-item wx:for="{{banners}}" wx:key="type">
+        <view class="banner-slide" bindtap="discover" data-type="{{item.type}}" role="button">
+          <image class="banner-image" src="{{item.image}}" mode="aspectFill" aria-hidden="true"/>
+          <view class="banner-copy"><text class="banner-title">{{item.title}}</text><text class="banner-link">发现灵感 ↗</text></view>
+        </view>
+      </swiper-item>
+    </swiper>
+  </view>
+  <view class="home-content stack" id="resource-feed">
+    <view class="grid" wx:if="{{items.length}}"><content-card wx:for="{{items}}" wx:key="id" item="{{item}}"/></view>
+    <page-state loading="{{loading && (!items.length || loadingMore)}}" error="{{error}}" has-items="{{items.length > 0}}" skeleton="cards" empty-text="{{query ? '没有找到相关内容' : channel === 'featured' ? '暂时没有精选内容' : '这里还没有内容'}}" bind:retry="reload"/>
+  </view>
+</view>

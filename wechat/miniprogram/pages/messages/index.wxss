@@ -1,0 +1,5 @@
+.message-toolbar { min-height: 44px; }
+.message-dot { flex: none; width: 7px; height: 7px; border-radius: 50%; }
+.message-dot.unread { background: #c52539; }
+.message-text { display: block; overflow-wrap: anywhere; }
+.message-text.unread { font-weight: 650; }

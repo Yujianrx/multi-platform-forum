@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { type AppContext, id, hash, fail, identifier, audit, pageQuery } from './core.js';
 import { getContent, canManage } from './permissions.js';
 import { enqueue } from './moderation.js';
+import { miniBodyBlocks } from './mini-markdown.js';
 import { syncContentHonors, honorSummaries } from './honors-engine.js';
 export async function socialRoutes(app: FastifyInstance, ctx: AppContext) {
   const { db } = ctx;
@@ -53,7 +54,9 @@ export async function socialRoutes(app: FastifyInstance, ctx: AppContext) {
       items.map((i) => i.author_id),
     );
     return {
-      items: items.map((i) => ({ ...i, honors: honors[i.author_id] })),
+      items: items.map((i) => ({ ...i, honors: honors[i.author_id],
+        ...(req.miniSession ? { bodyBlocks: miniBodyBlocks(i.body) } : {}),
+      })),
       total: (
         await db.query(`SELECT count(*)::int total FROM comments cm WHERE ${where}`, [
           cid,

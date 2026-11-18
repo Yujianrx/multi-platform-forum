@@ -1,0 +1,20 @@
+<view class="page tab-page stack" wx:if="{{signedIn}}">
+  <view class="row spread message-toolbar" wx:if="{{items.length}}">
+    <text class="muted">{{unread ? unread + ' 条未读' : '全部已读'}}</text>
+    <button wx:if="{{unread}}" class="secondary compact" bindtap="markRead" loading="{{marking}}" disabled="{{marking}}">全部标为已读</button>
+  </view>
+  <view class="panel list" wx:if="{{items.length}}">
+    <view wx:for="{{items}}" wx:key="id" class="list-item" bindtap="openMessage" hover-class="{{item.content_id ? 'row-pressed' : 'none'}}" data-id="{{item.content_id}}">
+      <view class="message-dot {{item.read_at ? '' : 'unread'}}" aria-label="{{item.read_at ? '已读' : '未读'}}"></view>
+      <view class="grow">
+        <text class="message-text {{item.read_at ? '' : 'unread'}}">{{item.message}}</text>
+        <text class="meta list-meta">{{item.date}}</text>
+      </view>
+      <text class="action-arrow" aria-hidden="true" wx:if="{{item.content_id}}">›</text>
+    </view>
+  </view>
+  <page-state loading="{{loading && (!items.length || loadingMore)}}" error="{{error}}" has-items="{{items.length > 0}}" skeleton="rows" empty-text="暂无消息" bind:retry="reload"/>
+</view>
+<view class="page tab-page" wx:else>
+  <view class="panel stack sign-in-panel"><text class="heading">消息</text><button class="primary" bindtap="login">登录后查看消息</button></view>
+</view>

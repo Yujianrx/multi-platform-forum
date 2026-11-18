@@ -1,0 +1,22 @@
+.forum-page.page { padding-top: 0; padding-right: 0; padding-left: 0; background: #f8f7f7; }
+.forum-head { padding: 11px 15px 10px; background: white; }
+.sort-tabs { margin-top: 8px; gap: 7px; }
+.sort-tabs .pill { min-height: 36px; padding: 4px 12px; border-color: transparent; background: #f5f2f4; }
+.sort-tabs .pill.active { background: #fff0f2; color: #bf2537; }
+.topic-list { display: grid; gap: 7px; margin-top: 7px; }
+.topic { padding: 16px 16px 17px; background: white; }
+.topic-pressed { background: #fff8f9; }
+.topic-author { align-items: start; gap: 8px; }
+.topic-avatar { display: grid; flex: none; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: #f3e4e5; color: #91525a; font-size: 10px; font-weight: 700; }
+.topic-name, .topic-meta { display: block; overflow-wrap: anywhere; }
+.topic-name { color: #4b3b45; font-size: 13px; }
+.topic-meta { color: #74636d; font-size: 11px; }
+.topic-kind { padding: 2px 5px; border-radius: 4px; background: #f5f2f4; color: #74636d; font-size: 11px; }
+.topic-title { margin-top: 10px; color: #252326; font-size: 17px; font-weight: 750; line-height: 1.42; overflow-wrap: anywhere; }
+.topic-pin { margin-right: 5px; color: #a9263a; font-size: 11px; }
+.topic-excerpt { display: -webkit-box; overflow: hidden; -webkit-line-clamp: 3; -webkit-box-orient: vertical; margin-top: 6px; color: #74636d; font-size: 13px; line-height: 1.7; overflow-wrap: anywhere; }
+.topic-footer { margin-top: 12px; color: #74636d; font-size: 11px; }
+.reply-count { gap: 5px; }
+.reply-icon { position: relative; width: 13px; height: 11px; border: 1px solid; border-radius: 5px; }
+.reply-icon::after { position: absolute; left: 1px; bottom: -3px; width: 3px; height: 3px; border-bottom: 1px solid; border-left: 1px solid; background: #fff; content: ""; }
+.topic-feed-state { padding: 8px 12px; }

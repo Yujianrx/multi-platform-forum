@@ -1,0 +1,5 @@
+{
+  "navigationBarTitleText": "详情",
+  "enablePullDownRefresh": true,
+  "usingComponents": { "rich-body": "/components/rich-body/index", "private-image": "/components/private-image/index" }
+}

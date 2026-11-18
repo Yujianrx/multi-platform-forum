@@ -1,0 +1,54 @@
+<view class="page tab-page profile-page" wx:if="{{signedIn}}">
+  <view class="profile stack">
+    <view class="row profile-person">
+      <view class="avatar">
+        <text>{{initial}}</text>
+        <private-image wx:if="{{user.avatar_version}}" class="avatar-image" path="{{'/api/avatars/' + user.id}}" label="头像"/>
+      </view>
+      <text class="title profile-name grow">{{user.name}}</text>
+    </view>
+    <text class="muted profile-bio" wx:if="{{user.bio}}">{{user.bio}}</text>
+    <view class="row profile-shortcuts">
+      <view class="profile-shortcut {{tab === 'review' ? 'selected' : ''}}" bindtap="filter" hover-class="row-pressed" data-tab="review" role="button">等待审核</view>
+      <view class="profile-shortcut {{tab === 'rejected' ? 'selected' : ''}}" bindtap="filter" hover-class="row-pressed" data-tab="rejected" role="button">被退回</view>
+    </view>
+    <view class="level" wx:if="{{honors}}">
+      <view class="row spread"><text class="level-title grow"><text class="level-number">Lv.{{honors.level.number}}</text> {{honors.level.name}}</text><text class="points">{{honors.level.total}} <text class="meta">积分</text></text></view>
+      <progress percent="{{honors.level.progress}}" activeColor="#b98e65" backgroundColor="#ecdfd4" border-radius="4" stroke-width="4" aria-label="等级进度"/>
+      <text class="level-next" wx:if="{{honors.level.next.name}}">距「{{honors.level.next.name}}」还需 {{honors.level.remaining}} 分</text>
+    </view>
+    <view class="row wrap badge-strip" wx:if="{{honors.badges.length}}">
+      <text class="profile-badge" wx:for="{{honors.badges}}" wx:key="id">{{item.name}}</text>
+    </view>
+  </view>
+  <scroll-view scroll-x class="pills profile-tabs" enhanced show-scrollbar="{{false}}">
+    <view class="tab-strip scroll-tabs" role="tablist" aria-label="我的内容">
+      <block wx:for="{{tabs}}" wx:key="value">
+        <view wx:if="{{item.value !== 'review' && item.value !== 'rejected'}}" bindtap="filter" data-tab="{{item.value}}" class="tab-link {{tab === item.value ? 'active' : ''}}" role="tab" aria-selected="{{tab === item.value}}">{{item.label}}</view>
+      </block>
+    </view>
+  </scroll-view>
+  <view class="profile-feed stack">
+    <view class="grid" wx:if="{{items.length && (tab === 'all' || tab === 'bookmarks' || tab === 'downloads')}}">
+      <content-card wx:for="{{items}}" wx:key="id" item="{{item}}"/>
+    </view>
+    <view class="panel list" wx:elif="{{items.length}}">
+      <view wx:for="{{items}}" wx:key="id" class="list-item" bindtap="open" hover-class="row-pressed" data-id="{{item.id}}" role="button">
+        <view class="grow">
+          <text class="list-title">{{item.title || '未命名草稿'}}</text>
+          <text class="meta list-meta">{{item.typeLabel}}{{item.stateLabel ? ' · ' + item.stateLabel : ''}}</text>
+          <text class="meta error list-meta" wx:if="{{tab === 'rejected' && item.reason}}">{{item.reason}}</text>
+        </view>
+        <text class="action-arrow" aria-hidden="true">›</text>
+      </view>
+    </view>
+    <page-state loading="{{loading && (!items.length || loadingMore)}}" error="{{error}}" has-items="{{items.length > 0}}" skeleton="{{tab === 'all' || tab === 'bookmarks' || tab === 'downloads' ? 'cards' : 'rows'}}" empty-text="暂无记录" bind:retry="reload"/>
+    <view class="panel account-actions">
+      <button class="ghost" bindtap="binding">复制账号绑定管理地址</button>
+      <button class="ghost danger" bindtap="logout" loading="{{loggingOut}}" disabled="{{loggingOut}}">退出登录</button>
+    </view>
+  </view>
+</view>
+<view class="page tab-page" wx:else>
+  <view class="panel stack sign-in-panel"><text class="heading">我的</text><button class="primary" bindtap="login">登录社区账号</button></view>
+</view>

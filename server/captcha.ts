@@ -1,6 +1,6 @@
 import { createHmac, randomInt, timingSafeEqual } from 'node:crypto';
 import sharp from 'sharp';
-import type { FastifyInstance } from 'fastify';
+import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { fail, hash, id, token, type AppContext } from './core.js';
 import type { Database } from './db.js';
 
@@ -51,17 +51,16 @@ export async function captchaRoutes(
   ctx: AppContext,
   source: CaptchaSource = generateCaptcha,
 ) {
-  app.get(
-    '/api/auth/captcha',
-    { config: { rateLimit: { max: 30, timeWindow: '1 minute' } } },
-    async (req, reply) => {
+  const limited = { config: { rateLimit: { max: 30, timeWindow: '1 minute' } } };
+  const challenge = async (req: FastifyRequest, reply: FastifyReply, mini = false) => {
       const secret = token(),
         challengeId = id(),
         generated = await source();
       const expiresAt = new Date(Date.now() + CAPTCHA_TTL * 1000).toISOString();
+      const previous = mini ? req.headers['x-captcha-token'] : req.cookies[COOKIE];
       await ctx.db.transaction(async (tx) => {
         await tx.query('DELETE FROM login_captchas WHERE expires_at<=now() OR binding_hash=$1', [
-          hash(req.cookies[COOKIE] || ''),
+          hash(typeof previous === 'string' ? previous : ''),
         ]);
         await tx.query(
           'INSERT INTO login_captchas(id,binding_hash,answer_digest,expires_at) VALUES($1,$2,$3,$4)',
@@ -73,7 +72,7 @@ export async function captchaRoutes(
           ],
         );
       });
-      reply.setCookie(COOKIE, secret, {
+      if (!mini) reply.setCookie(COOKIE, secret, {
         httpOnly: true,
         secure: ctx.production,
         sameSite: 'strict',
@@ -84,9 +83,11 @@ export async function captchaRoutes(
         id: challengeId,
         image: 'data:image/png;base64,' + generated.image.toString('base64'),
         expiresAt,
+        ...(mini ? { captchaToken: secret } : {}),
       };
-    },
-  );
+  };
+  app.get('/api/auth/captcha', limited, (req, reply) => challenge(req, reply));
+  if (ctx.miniprogram) app.get('/api/mini/auth/captcha', limited, (req, reply) => challenge(req, reply, true));
 }
 
 export async function consumeCaptcha(

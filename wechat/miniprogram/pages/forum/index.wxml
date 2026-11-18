@@ -1,0 +1,37 @@
+<view class="page tab-page forum-page" wx:if="{{signedIn}}">
+  <view class="forum-head">
+    <view class="row toolbar">
+      <view class="row grow search-group">
+        <input class="input" placeholder="搜索讨论" maxlength="100" value="{{searchTerm}}" bindinput="searchInput" confirm-type="search" bindconfirm="search"/>
+        <button wx:if="{{searchTerm}}" class="search-clear ghost" bindtap="clearSearch" aria-label="清除搜索">×</button>
+      </view>
+    </view>
+    <view class="row wrap sort-tabs" role="tablist" aria-label="话题排序">
+      <view wx:for="{{sorts}}" wx:key="value" class="pill {{sort === item.value ? 'active' : ''}}" bindtap="filter" data-sort="{{item.value}}" role="tab" aria-selected="{{sort === item.value}}">{{item.name}}</view>
+    </view>
+  </view>
+  <view class="topic-list" wx:if="{{items.length}}">
+    <view wx:for="{{items}}" wx:key="id" class="topic" bindtap="open" hover-class="topic-pressed" data-id="{{item.id}}" role="button">
+      <view class="row topic-author">
+        <text class="topic-avatar">{{item.initial}}</text>
+        <view class="grow">
+          <text class="topic-name">{{item.author}}</text>
+          <text class="topic-meta">{{item.date}} · {{item.board}}</text>
+        </view>
+        <text class="topic-kind">{{item.kindLabel}}</text>
+      </view>
+      <view class="topic-title"><text wx:if="{{item.pinned}}" class="topic-pin">置顶</text><text>{{item.title}}</text></view>
+      <text wx:if="{{item.preview}}" class="topic-excerpt">{{item.preview}}</text>
+      <view class="row spread topic-footer">
+        <text>{{item.views || 0}} 次阅读</text>
+        <view class="row reply-count"><view class="reply-icon"></view><text>{{item.replies || 0}} 条回复</text></view>
+      </view>
+    </view>
+  </view>
+  <view class="topic-feed-state">
+    <page-state loading="{{loading && (!items.length || loadingMore)}}" error="{{error}}" has-items="{{items.length > 0}}" skeleton="rows" empty-text="{{query ? '没有找到相关讨论' : '这里还没有话题'}}" bind:retry="reload"/>
+  </view>
+</view>
+<view class="page tab-page" wx:else>
+  <view class="panel stack sign-in-panel"><text class="heading">讨论</text><button class="primary" bindtap="login">登录后查看讨论</button></view>
+</view>

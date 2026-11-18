@@ -1,0 +1,22 @@
+<view class="page stack" wx:if="{{signedIn}}">
+  <scroll-view scroll-x class="pills" enhanced show-scrollbar="{{false}}">
+    <view class="tab-strip scroll-tabs" role="tablist" aria-label="榜单类型">
+      <view wx:for="{{tabs}}" wx:key="value" bindtap="filter" data-key="tab" data-value="{{item.value}}" class="tab-link {{tab === item.value ? 'active' : ''}}" role="tab" aria-selected="{{tab === item.value}}">{{item.label}}</view>
+    </view>
+  </scroll-view>
+  <view class="row wrap" wx:if="{{tab !== 'contribution'}}">
+    <view wx:for="{{periods}}" wx:key="value" bindtap="filter" data-key="period" data-value="{{item.value}}" class="pill {{period === item.value ? 'active' : ''}}" role="button" aria-pressed="{{period === item.value}}">{{item.label}}</view>
+  </view>
+  <view class="panel list" wx:if="{{items.length}}">
+    <view wx:for="{{items}}" wx:key="id" class="list-item" bindtap="openRank" hover-class="{{tab === 'contribution' ? 'none' : 'row-pressed'}}" data-id="{{item.id}}">
+      <text class="rank {{index < 3 ? 'top-rank' : ''}}">{{item.rank || index + 1}}</text>
+      <text class="grow list-title">{{item.title || item.name}}</text>
+      <text class="rank-score">{{tab === 'contribution' ? item.points + ' 分' : item.score}}</text>
+      <text class="action-arrow" aria-hidden="true" wx:if="{{tab !== 'contribution'}}">›</text>
+    </view>
+  </view>
+  <page-state loading="{{loading && (!items.length || loadingMore)}}" error="{{error}}" has-items="{{items.length > 0}}" skeleton="rows" empty-text="暂无排名" bind:retry="reload"/>
+</view>
+<view class="page" wx:else>
+  <view class="panel stack sign-in-panel"><text class="heading">榜单</text><button class="primary" bindtap="login">登录后查看榜单</button></view>
+</view>

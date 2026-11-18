@@ -1,0 +1,24 @@
+.profile-page.page { padding-top: 0; padding-right: 0; padding-left: 0; background: #f8f7f7; }
+.profile { padding: 20px 18px 16px; gap: 14px; background: linear-gradient(#fcf7f5, #fff 56%); }
+.profile-person { gap: 14px; }
+.avatar { position: relative; display: grid; flex: none; place-items: center; width: 76px; height: 76px; overflow: hidden; border: 3px solid white; border-radius: 50%; background: #f0e3df; color: #9e6264; font-size: 24px; font-weight: 750; }
+.avatar-image { position: absolute; inset: 0; }
+.profile-name { font-size: 23px; }
+.profile-bio { display: block; overflow-wrap: anywhere; }
+.profile-shortcuts { gap: 12px; }
+.profile-shortcut { display: flex; align-items: center; min-height: 44px; color: #74636d; font-size: 13px; }
+.profile-shortcut.selected { color: #bf2537; font-weight: 700; }
+.level { display: grid; gap: 7px; padding: 12px 14px; border-radius: 12px; background: #fbf2eb; }
+.level-title { color: #6e442c; font-size: 14px; overflow-wrap: anywhere; }
+.level-number { padding: 2px 4px; border-radius: 4px; background: #ebd4b8; font-size: 11px; font-weight: 750; }
+.points { flex: none; color: #6e442c; font-size: 18px; font-weight: 750; }
+.level-next { color: #7d624f; font-size: 11px; }
+.badge-strip { min-height: 28px; }
+.profile-badge { padding: 3px 8px; border-radius: 8px; background: #fbf2eb; color: #6e442c; font-size: 12px; }
+.profile-tabs { margin-top: 7px; background: #fff; }
+.profile-tabs .tab-strip { padding: 0 10px; }
+.profile-tabs .tab-link { flex: 1; }
+.profile-feed { padding: 10px 9px 0; }
+.profile-feed .grid { column-gap: 9px; row-gap: 12px; }
+.account-actions { display: grid; grid-template-columns: 1fr auto; gap: 6px; padding: 4px 8px; }
+@media (max-width: 340px) { .account-actions { grid-template-columns: 1fr; } }

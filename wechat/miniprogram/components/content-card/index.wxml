@@ -1,0 +1,15 @@
+<view class="card" bindtap="open" hover-class="pressed" role="button" aria-label="{{item.title || '未命名草稿'}}">
+  <view class="cover {{item.type}}">
+    <view class="cover-words"><text>{{item.typeLabel}}</text><view>{{item.title || '未命名草稿'}}</view><text class="category" wx:if="{{item.category}}">{{item.category}}</text></view>
+    <private-image wx:if="{{item.cover_id}}" class="cover-image" path="{{'/api/files/' + item.cover_id}}" label="封面" lazy="{{true}}" bind:loaded="coverLoaded"/>
+    <text wx:if="{{item.state && item.state !== 'published' && item.stateLabel}}" class="badge">{{item.stateLabel}}</text>
+    <text wx:elif="{{item.featured}}" class="badge">精选</text>
+  </view>
+  <view class="card-foot">
+    <text class="card-title {{coverReady ? '' : 'card-summary'}}">{{coverReady ? item.title || '未命名草稿' : item.preview}}</text>
+    <view class="author">
+      <text class="initial" aria-hidden="true">{{item.initial}}</text><text class="name">{{item.author}}</text>
+      <text class="likes" aria-label="{{item.likes || 0}} 个赞">♡ {{item.likes || 0}}</text>
+    </view>
+  </view>
+</view>

@@ -55,6 +55,7 @@ declare module 'fastify' {
     csrf: string;
     sessionHash: string;
     apiKeyId: string;
+    miniSession: boolean;
   }
   interface FastifyContextConfig {
     personalApiKey?: boolean;
@@ -68,6 +69,7 @@ export type AppContext = {
   provider: string;
   clamHost?: string;
   clamPort: number;
+  miniprogram?: { appId: string; bridgeSecret: string };
 };
 export const userFields =
   'id,username,name,role,department_id,active,must_reset,bio,avatar_version,moderation_exempt';

@@ -15,6 +15,7 @@ import { getContent, canReadRevision, canManage } from './permissions.js';
 import { enqueue } from './moderation.js';
 import { syncContentHonors, honorSummaries } from './honors-engine.js';
 import { recordContentView } from './views.js';
+import { miniBodyBlocks } from './mini-markdown.js';
 import type { Queryable } from './db.js';
 import type { User } from './core.js';
 export const contentData = z
@@ -209,6 +210,7 @@ export async function contentRoutes(app: FastifyInstance, ctx: AppContext) {
     return {
       ...c,
       revision: r,
+      ...(req.miniSession ? { bodyBlocks: miniBodyBlocks(r?.data?.body || '') } : {}),
       author,
       honors: (await honorSummaries(db, [c.author_id]))[c.author_id],
       metrics,

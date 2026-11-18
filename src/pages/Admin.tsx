@@ -122,6 +122,7 @@ export function Admin() {
             role: item.role,
             active: item.active,
             moderationExempt: item.moderation_exempt ?? false,
+            phone: item.phone_e164 || '',
             scopes: item.scopes || [],
           }
         : kind === 'invite'
@@ -189,7 +190,7 @@ export function Admin() {
         );
         setSecret(r.code);
       } else if (kind === 'user') {
-        await act(() => send('/admin/users/' + modal.item.id, form, 'PATCH'));
+        await act(() => send('/admin/users/' + modal.item.id, { ...form, phone: form.phone.trim() || null }, 'PATCH'));
         if (modal.item.id === user.id) await refresh();
       } else if (kind === 'deleteUser') {
         await act(
@@ -1313,6 +1314,9 @@ export function Admin() {
                         </option>
                       ))}
                     </select>
+                  </Field>
+                  <Field label="手机号" hint="用于微信小程序匹配此账号">
+                    <input type="tel" value={form.phone} maxLength={32} onChange={(e) => change('phone', e.target.value)} />
                   </Field>
                   <label className="checkbox">
                     <input

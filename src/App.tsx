@@ -24,6 +24,7 @@ import { Profile, Notifications, Author } from './pages/Profile';
 import { Forum, ForumEditor, ForumTopic } from './pages/Forum';
 import { HonorLeaderboard } from './Honors';
 const Admin = lazy(() => import('./pages/Admin').then((m) => ({ default: m.Admin })));
+const WechatBinding = lazy(() => import('./pages/WechatBinding'));
 const MobileHeader = lazy(() =>
   import('./mobile/MobileShell').then((m) => ({ default: m.MobileHeader })),
 );
@@ -123,7 +124,7 @@ export default function App() {
         site={site}
         onLogin={async () => {
           await refresh();
-          navigate('/');
+          if (location.pathname !== '/wechat') navigate('/');
         }}
       />
     );
@@ -220,6 +221,7 @@ export default function App() {
             <Route path="/editor/:id?" element={<Editor />} />
             <Route path="/content/:id" element={<Detail />} />
             <Route path="/me" element={<Profile />} />
+            <Route path="/wechat" element={user.must_reset ? <Navigate to="/me?tab=settings" /> : <WechatBinding />} />
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/author/:id" element={<Author />} />
             <Route

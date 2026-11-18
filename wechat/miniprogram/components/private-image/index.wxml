@@ -1,0 +1,1 @@
+<image wx:if="{{local}}" class="media" mode="{{mode}}" src="{{local}}" lazy-load="{{lazy}}" bindload="loaded" aria-label="{{label}}"/>

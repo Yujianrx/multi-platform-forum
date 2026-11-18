@@ -4,6 +4,7 @@ import { hash } from './core.js';
 // Call only AFTER current authentication, scope and file-safety checks.
 // No freshness window: a browser must revalidate before reusing private bytes.
 export function privateImageUnchanged(req: FastifyRequest, reply: FastifyReply, version: string) {
+  if (req.miniSession) return false;
   const etag = '"' + hash(version) + '"';
   reply
     .header('Cache-Control', 'private, no-cache, must-revalidate')

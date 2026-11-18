@@ -1,0 +1,9 @@
+{
+  "appid": "wxba3e4b720e083da7",
+  "projectname": "小鱼号AI共创社区",
+  "compileType": "miniprogram",
+  "miniprogramRoot": "miniprogram/",
+  "cloudfunctionRoot": "cloudfunctions/",
+  "libVersion": "3.18.0",
+  "setting": { "urlCheck": true, "es6": true, "minified": true, "uploadWithSourceMap": false }
+}

@@ -1,0 +1,1 @@
+{ "enablePullDownRefresh": true, "navigationBarTitleText": "", "usingComponents": { "content-card": "/components/content-card/index" } }

@@ -1,0 +1,13 @@
+<view class="tab-bar">
+  <view class="tab-inner" role="tablist" aria-label="底部导航">
+    <block wx:for="{{tabs}}" wx:key="key">
+      <button wx:if="{{index === 2 && canPublish}}" class="tab-button publish-tab" hover-class="tab-button-hover" bindtap="publish" aria-label="发布">
+        <view class="publish-mark"></view>
+      </button>
+      <button class="tab-button tab-{{item.key}} {{selected === item.route ? 'active' : ''}}" hover-class="tab-button-hover" bindtap="select" data-route="{{item.route}}" role="tab" aria-selected="{{selected === item.route}}">
+        <image class="tab-icon" src="{{'/assets/' + item.key + (selected === item.route ? '-active' : '') + '.png'}}" mode="aspectFit"/>
+        <text>{{item.label}}</text>
+      </button>
+    </block>
+  </view>
+</view>

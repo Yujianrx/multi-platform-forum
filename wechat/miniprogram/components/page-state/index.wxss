@@ -1,0 +1,19 @@
+.skeleton { display: grid; gap: 9px; }
+.cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.placeholder { min-width: 0; padding: 12px; border: 1px solid #eee6ea; border-radius: 14px; background: #fff; }
+.placeholder-cover, .placeholder-line { border-radius: 6px; background: #f0e8ec; }
+.placeholder-cover { display: none; }
+.cards .placeholder-cover { display: block; aspect-ratio: 4/5; margin-bottom: 11px; }
+.placeholder-line { width: 88%; height: 10px; margin: 6px 0; }
+.short { width: 52%; }
+.progress, .state { display: flex; align-items: center; justify-content: center; gap: 9px; color: #74636d; text-align: center; font-size: 14px; }
+.progress { min-height: 44px; }
+.state { flex-direction: column; padding: 24px 16px; border: 1px solid #eee6ea; border-radius: 16px; background: #fff; }
+.empty { padding: 32px 16px; }
+.message { max-width: 100%; overflow-wrap: anywhere; }
+.state button { min-height: 44px; margin: 0; padding: 6px 18px; border: 0; border-radius: 10px; background: #faeef0; color: #a9263a; font-size: 14px; font-weight: 600; line-height: 1.5; }
+.state button::after { border: 0; }
+.spinner { width: 13px; height: 13px; border: 2px solid #edd9de; border-top-color: #c52539; border-radius: 50%; animation: spin .85s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spinner { animation: none; } }
+@media (min-width: 550px) { .cards { grid-template-columns: repeat(3, minmax(0, 1fr)); } }

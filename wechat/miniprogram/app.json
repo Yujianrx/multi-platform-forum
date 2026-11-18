@@ -1,0 +1,24 @@
+{
+  "pages": ["pages/home/index", "pages/forum/index", "pages/messages/index", "pages/mine/index", "pages/detail/index", "pages/edit/index", "pages/rankings/index"],
+  "window": {
+    "navigationBarTitleText": "小鱼号AI共创社区",
+    "navigationBarBackgroundColor": "#ffffff",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#f8f5f6",
+    "backgroundTextStyle": "dark"
+  },
+  "tabBar": {
+    "custom": true,
+    "color": "#74636d", "selectedColor": "#c52539", "backgroundColor": "#ffffff", "borderStyle": "white",
+    "list": [
+      { "pagePath": "pages/home/index", "text": "首页", "iconPath": "assets/home.png", "selectedIconPath": "assets/home-active.png" },
+      { "pagePath": "pages/forum/index", "text": "讨论", "iconPath": "assets/forum.png", "selectedIconPath": "assets/forum-active.png" },
+      { "pagePath": "pages/messages/index", "text": "消息", "iconPath": "assets/messages.png", "selectedIconPath": "assets/messages-active.png" },
+      { "pagePath": "pages/mine/index", "text": "我的", "iconPath": "assets/mine.png", "selectedIconPath": "assets/mine-active.png" }
+    ]
+  },
+  "usingComponents": { "page-state": "/components/page-state/index" },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}

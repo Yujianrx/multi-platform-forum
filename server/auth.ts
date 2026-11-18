@@ -2,6 +2,7 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { z } from 'zod';
 import { captchaRoutes, consumeCaptcha, type CaptchaSource } from './captcha.js';
 import { authenticateApiKey, revokeUserApiKeys } from './api-keys.js';
+import { acceptsMiniSession, createMiniSession } from './miniprogram.js';
 import {
   type AppContext,
   type User,
@@ -37,6 +38,7 @@ export async function authRoutes(
   app.decorateRequest('csrf', '');
   app.decorateRequest('sessionHash', '');
   app.decorateRequest('apiKeyId', '');
+  app.decorateRequest('miniSession', false);
   app.addHook('onRequest', async (req, reply) => {
     if (!req.routeOptions.url?.startsWith('/api/')) return;
     reply.header('Cache-Control', 'no-store, private').header('Vary', 'Cookie');
@@ -50,6 +52,8 @@ export async function authRoutes(
       await authenticateApiKey(ctx, req);
       return;
     }
+    if (ctx.miniprogram && req.routeOptions.url === '/api/mini/bridge') return;
+    if (ctx.miniprogram && ['/api/mini/auth/login', '/api/mini/auth/register', '/api/mini/auth/captcha'].includes(req.routeOptions.url)) return;
     const publicRoute = [
       '/api/auth/login',
       '/api/auth/captcha',
@@ -58,10 +62,17 @@ export async function authRoutes(
       '/api/public',
       '/api/health',
     ].includes(req.routeOptions.url);
-    if (!['GET', 'HEAD', 'OPTIONS'].includes(req.method) && req.headers.origin !== ctx.origin)
+    const authorization = req.headers.authorization || '';
+    const miniSession = Boolean(ctx.miniprogram && /^Bearer wx1_[\w-]{43}$/.test(authorization));
+    const write = !['GET', 'HEAD', 'OPTIONS'].includes(req.method);
+    if (miniSession) {
+      reply.header('Vary', 'Authorization');
+      if (!acceptsMiniSession(req.method, req.routeOptions.url)) fail(403, '小程序不支持此操作');
+    }
+    if (write && !miniSession && req.headers.origin !== ctx.origin)
       fail(403, '请求来源验证失败');
     if (publicRoute) return;
-    const raw = req.cookies.session;
+    const raw = miniSession ? authorization.slice(7) : req.cookies.session;
     if (!raw) fail(401, '请先登录');
     const rows = await db.query(
       `SELECT ${userFields
@@ -69,8 +80,8 @@ export async function authRoutes(
         .map((f) => 'u.' + f)
         .join(
           ',',
-        )},s.csrf FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.token_hash=$1 AND s.expires_at>now() AND u.active`,
-      [hash(raw)],
+        )},s.csrf FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.token_hash=$1 AND s.expires_at>now() AND u.active AND s.mini_app_id IS NOT DISTINCT FROM $2`,
+      [hash(raw), miniSession ? ctx.miniprogram!.appId : null],
     );
     if (!rows.length) {
       reply.clearCookie('session', { path: '/' });
@@ -79,34 +90,37 @@ export async function authRoutes(
     req.user = rows[0] as User;
     req.csrf = rows[0].csrf;
     req.sessionHash = hash(raw);
+    req.miniSession = miniSession;
     if (
       req.user.must_reset &&
       !['/api/auth/me', '/api/auth/password', '/api/auth/logout'].includes(req.url.split('?')[0])
     )
       fail(403, '请先设置新密码');
-    if (
-      !['GET', 'HEAD', 'OPTIONS'].includes(req.method) &&
-      req.headers['x-csrf-token'] !== req.csrf
-    )
+    if (write && !miniSession && req.headers['x-csrf-token'] !== req.csrf)
       fail(403, '安全校验失败，请刷新页面');
   });
-  const createSession = async (userId: string, reply: FastifyReply) => {
+  const createSession = async (userId: string, reply: FastifyReply, mini = false, verifiedPassword?: string) => {
     const raw = token(),
       csrf = token();
-    const user = await db.transaction(async (tx) => {
-      const u = (
+    const { user, session } = await db.transaction(async (tx) => {
+      const { password_hash, ...user } = (
         await tx.query(
-          `SELECT ${userFields} FROM users WHERE id=$1 AND active AND deleted_at IS NULL FOR UPDATE`,
+          `SELECT ${userFields},password_hash FROM users WHERE id=$1 AND active AND deleted_at IS NULL FOR UPDATE`,
           [userId],
         )
-      )[0];
-      if (!u) fail(401, '账号已不可用');
+      )[0] || {};
+      if (!user.id || (verifiedPassword !== undefined && verifiedPassword !== password_hash)) fail(401, '账号已不可用，请重新登录');
+      if (mini && ctx.miniprogram) {
+        if (user.must_reset) fail(403, '请先在社区网页设置新密码');
+        return { user, session: await createMiniSession(tx, userId, ctx.miniprogram.appId) };
+      }
       await tx.query(
         "INSERT INTO sessions(token_hash,user_id,csrf,expires_at) VALUES($1,$2,$3,now()+interval '7 days')",
         [hash(raw), userId, csrf],
       );
-      return u;
+      return { user };
     });
+    if (session) return { user, session };
     reply.setCookie('session', raw, cookieOptions);
     return {
       user,
@@ -115,7 +129,7 @@ export async function authRoutes(
   };
   const limited = { config: { rateLimit: { max: 10, timeWindow: '1 minute' } } };
   await captchaRoutes(app, ctx, captchaSource);
-  app.post('/api/auth/register', limited, async (req, reply) => {
+  const register = async (req: FastifyRequest, reply: FastifyReply, mini = false) => {
     const p = z
       .object({
         name: z.string().trim().min(1, '请填写姓名').max(50, '姓名最多 50 个字'),
@@ -161,11 +175,13 @@ export async function authRoutes(
       ]);
       await audit(tx, uid, 'account.register', uid);
     });
-    return reply.code(201).send(await createSession(uid, reply));
-  });
+    return reply.code(201).send(await createSession(uid, reply, mini));
+  };
+  app.post('/api/auth/register', limited, (req, reply) => register(req, reply));
+  if (ctx.miniprogram) app.post('/api/mini/auth/register', limited, (req, reply) => register(req, reply, true));
   // Fixed dummy hash prevents cheap account-enumeration through nonexistent users.
   const dummy = await passwordHash(token());
-  app.post('/api/auth/login', limited, async (req, reply) => {
+  const login = async (req: FastifyRequest, reply: FastifyReply, mini = false) => {
     const p = z
       .object({
         username: z.string().max(100),
@@ -174,14 +190,17 @@ export async function authRoutes(
         captchaCode: z.string().max(20).default(''),
       })
       .parse(req.body);
-    await consumeCaptcha(db, req.cookies.login_challenge, p.captchaId, p.captchaCode);
+    const challenge = mini ? req.headers['x-captcha-token'] : req.cookies.login_challenge;
+    await consumeCaptcha(db, typeof challenge === 'string' ? challenge : undefined, p.captchaId, p.captchaCode);
     const u = (
       await db.query('SELECT * FROM users WHERE username=$1', [p.username.trim().toLowerCase()])
     )[0];
     const valid = await verifyPassword(p.password, u?.password_hash || dummy);
     if (!u || !valid || !u.active) fail(401, '账号或密码错误，或账号已停用');
-    return createSession(u.id, reply);
-  });
+    return createSession(u.id, reply, mini, u.password_hash);
+  };
+  app.post('/api/auth/login', limited, (req, reply) => login(req, reply));
+  if (ctx.miniprogram) app.post('/api/mini/auth/login', limited, (req, reply) => login(req, reply, true));
   app.get('/api/auth/me', async (req) => ({ user: req.user, csrf: req.csrf }));
   app.post('/api/auth/logout', async (req, reply) => {
     await db.query('DELETE FROM sessions WHERE token_hash=$1', [req.sessionHash]);
@@ -226,6 +245,7 @@ export async function authRoutes(
         req.user.id,
       ]);
       await tx.query('DELETE FROM sessions WHERE user_id=$1', [req.user.id]);
+      await tx.query('DELETE FROM mini_identities WHERE user_id=$1', [req.user.id]);
       await revokeUserApiKeys(tx, req.user.id);
       await audit(tx, req.user.id, 'account.password', req.user.id);
     });
@@ -263,6 +283,7 @@ export async function authRoutes(
         r.user_id,
       ]);
       await tx.query('DELETE FROM sessions WHERE user_id=$1', [r.user_id]);
+      await tx.query('DELETE FROM mini_identities WHERE user_id=$1', [r.user_id]);
       await revokeUserApiKeys(tx, r.user_id);
       await audit(tx, r.user_id, 'account.reset', r.user_id);
       return r.user_id;

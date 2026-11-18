@@ -17,6 +17,7 @@ import type { CaptchaSource } from './captcha.js';
 import { apiKeyRoutes } from './api-keys.js';
 import { openApiRoutes } from './open-api.js';
 import { honorsRoutes } from './honors-routes.js';
+import { miniprogramRoutes } from './miniprogram.js';
 export async function buildApp(ctx: AppContext, logger = false, captchaSource?: CaptchaSource) {
   const app = Fastify({
     logger: logger
@@ -25,10 +26,14 @@ export async function buildApp(ctx: AppContext, logger = false, captchaSource?: 
             'req.headers.cookie',
             'req.headers.authorization',
             'req.headers.x-csrf-token',
+            'req.headers.x-captcha-token',
             'req.body.password',
             'req.body.currentPassword',
             'req.body.confirmPassword',
             'req.body.captchaCode',
+            'req.body.code',
+            'req.body.phone',
+            'req.body.invite',
           ],
         }
       : false,
@@ -70,6 +75,7 @@ export async function buildApp(ctx: AppContext, logger = false, captchaSource?: 
   });
   await app.register(multipart, { limits: { files: 1, fileSize: 100 * 1024 * 1024, parts: 4 } });
   await authRoutes(app, ctx, captchaSource);
+  if (ctx.miniprogram) await miniprogramRoutes(app, ctx, ctx.miniprogram);
   app.get('/api/health', async () => {
     await ctx.db.query('SELECT 1');
     return { ok: true };

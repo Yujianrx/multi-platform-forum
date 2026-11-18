@@ -1,0 +1,89 @@
+<page-meta page-style="{{documentPreview ? 'overflow: hidden;' : ''}}"/>
+<view class="page stack detail-page">
+  <page-state wx:if="{{!item}}" loading="{{!error}}" error="{{error}}" skeleton="rows" bind:retry="load"/>
+  <block wx:else>
+    <view class="panel stack article">
+      <view class="stack article-header">
+        <text class="meta article-meta">{{typeLabel}}{{state ? ' · ' + state : ''}}</text>
+        <text class="title" user-select>{{item.revision.data.title || '未命名草稿'}}</text>
+        <view class="row">
+          <view class="detail-avatar"><private-image wx:if="{{item.author.avatar_version}}" path="{{'/api/avatars/' + item.author.id}}" label="头像"/></view>
+          <view class="grow"><text class="byline">{{item.author.name}}</text><text class="meta list-meta">{{item.author.department}} {{date}}</text></view>
+        </view>
+      </view>
+      <text class="summary" wx:if="{{item.revision.data.summary}}" user-select>{{item.revision.data.summary}}</text>
+      <rich-body blocks="{{item.bodyBlocks}}" revision="{{item.revision.id}}"/>
+      <view class="field" wx:for="{{fields}}" wx:key="key">
+        <view class="row spread"><text class="heading grow">{{item.label}}</text><button class="ghost compact" bindtap="copyField" data-value="{{item.value}}">复制</button></view>
+        <text class="field-text" user-select>{{item.value}}</text>
+      </view>
+      <view wx:if="{{files.length}}" class="article-files">
+        <text class="heading">附件</text>
+        <view wx:for="{{files}}" wx:key="id" class="list-item" bindtap="openFile" hover-class="{{item.scan_status === 'clean' ? 'row-pressed' : 'none'}}" data-id="{{item.id}}" data-name="{{item.original_name}}" data-image="{{item.kind === 'image'}}" data-pending="{{item.scan_status !== 'clean'}}">
+          <text class="grow file-name">{{item.original_name}}</text>
+          <text class="meta">{{item.scan_status === 'clean' ? openingFile === item.id ? '正在打开' : '查看 ›' : '待审核'}}</text>
+        </view>
+      </view>
+      <view class="row wrap article-actions" wx:if="{{published || owner || item.type === 'project' || item.type === 'skill'}}">
+        <block wx:if="{{published}}">
+          <button class="compact {{item.metrics.liked ? 'secondary' : ''}}" bindtap="toggle" data-key="like" aria-pressed="{{item.metrics.liked}}" disabled="{{action}}">{{item.metrics.liked ? '已赞' : '点赞'}} {{item.metrics.likes}}</button>
+          <button class="compact {{item.metrics.bookmarked ? 'secondary' : ''}}" bindtap="toggle" data-key="bookmark" aria-pressed="{{item.metrics.bookmarked}}" disabled="{{action}}">{{item.metrics.bookmarked ? '已收藏' : '收藏'}}</button>
+          <button wx:if="{{topic}}" class="compact {{topic.following ? 'secondary' : ''}}" bindtap="follow" aria-pressed="{{topic.following}}" disabled="{{action}}">{{topic.following ? '已关注' : '关注'}}</button>
+        </block>
+        <button wx:if="{{owner}}" class="compact secondary" bindtap="edit">编辑</button>
+        <button wx:if="{{item.type === 'project' || item.type === 'skill'}}" class="compact" bindtap="listVersions" aria-expanded="{{versionsOpen}}" loading="{{versionsLoading}}" disabled="{{versionsLoading}}">{{versionsOpen ? '收起版本' : '版本记录'}}</button>
+      </view>
+      <view wx:if="{{versionsOpen}}" class="version-list">
+        <view wx:for="{{versions}}" wx:key="id" class="list-item row spread" bindtap="openVersion" hover-class="row-pressed" data-id="{{item.id}}"><text>v{{item.data.fields.version || item.number}}</text><text class="meta">{{item.date}} ›</text></view>
+        <page-state loading="{{versionsLoading}}" error="{{versionsError}}" has-items="{{versions.length > 0}}" empty-text="暂无版本记录" bind:retry="loadVersions"/>
+      </view>
+    </view>
+    <view class="panel stack comments">
+      <text class="heading">{{topic ? '回复' : '评论'}} <text class="meta">{{item.metrics.comments}}</text></text>
+      <view wx:for="{{replies}}" wx:key="id" class="reply">
+        <view class="row spread"><text class="byline grow">{{item.author}}</text><text class="meta">{{item.date}}</text></view>
+        <text wx:if="{{item.status !== 'approved'}}" class="meta list-meta">{{item.state}}</text>
+        <text wx:if="{{item.parent_author}}" class="quoted">回复 {{item.parent_author}}</text>
+        <rich-body blocks="{{item.bodyBlocks}}"/>
+        <view wx:for="{{item.files}}" wx:for-item="file" wx:key="id" class="list-item" bindtap="openFile" hover-class="row-pressed" data-id="{{file.id}}" data-name="{{file.original_name}}" data-image="{{file.kind === 'image'}}" data-comment="{{true}}">
+          <text class="grow file-name">{{file.original_name}}</text><text class="meta">{{openingFile === file.id ? '正在打开' : '查看 ›'}}</text>
+        </view>
+        <button wx:if="{{item.status === 'approved' && published && !topic.locked}}" class="ghost compact reply-action" bindtap="quote" data-id="{{item.id}}" data-name="{{item.author}}">回复</button>
+      </view>
+      <page-state loading="{{repliesLoading}}" error="{{repliesError}}" has-items="{{replies.length > 0}}" empty-text="{{topic ? '暂无回复' : '暂无评论'}}" bind:retry="retryReplies"/>
+      <button wx:if="{{more && !repliesLoading && !repliesError}}" class="ghost" bindtap="onReachBottom">更多回复</button>
+      <view wx:if="{{published && !topic.locked}}" class="composer stack">
+        <view wx:if="{{parentId}}" class="row spread quoted"><text class="grow">回复 {{parentName}}</text><button class="ghost compact" bindtap="cancelQuote" aria-label="取消引用">×</button></view>
+        <textarea id="comment-editor" class="textarea" value="{{comment}}" bindinput="commentInput" bindblur="commentBlur" focus="{{focusReply}}" disabled="{{replying}}" auto-height cursor-spacing="16" maxlength="5000" placeholder="写下你的想法"/>
+        <scroll-view wx:if="{{commentStickers.length}}" class="sticker-preview" scroll-x enhanced show-scrollbar="{{false}}" scroll-into-view="{{stickerScrollTarget}}" aria-label="已添加的表情包">
+          <view class="sticker-preview-row">
+            <view class="picked-sticker" wx:for="{{commentStickers}}" wx:key="key" id="sticker-{{item.key}}">
+              <image class="picked-sticker-image" mode="aspectFit" src="{{item.src}}" aria-label="{{item.label}}"/>
+              <view class="sticker-remove" bindtap="removeReplySticker" data-key="{{item.key}}" role="button" aria-label="移除表情包：{{item.label}}" aria-disabled="{{replying}}">×</view>
+            </view>
+          </view>
+        </scroll-view>
+        <view class="list-item" wx:for="{{commentFiles}}" wx:key="id"><text class="grow file-name">{{item.original_name}}</text><button class="ghost compact attachment-remove" bindtap="removeReplyFile" data-id="{{item.id}}" aria-label="移除附件" disabled="{{replying}}">×</button></view>
+        <text wx:if="{{replyError}}" class="notice error" aria-live="polite">{{replyError}}</text>
+        <view class="composer-actions">
+          <button class="{{stickerPickerOpen ? 'secondary' : ''}}" bindtap="toggleStickerPicker" aria-expanded="{{stickerPickerOpen}}" disabled="{{replying}}">表情包</button>
+          <button bindtap="addReplyFile" disabled="{{replying || commentFiles.length >= 10}}">添加附件</button>
+          <button class="primary" bindtap="reply" loading="{{replying}}" disabled="{{replying || (!comment && !commentFiles.length && !commentStickers.length)}}">发送</button>
+        </view>
+        <view class="sticker-grid" id="comment-stickers" wx:if="{{stickerPickerOpen}}" aria-label="选择表情包">
+          <button wx:for="{{stickers}}" wx:key="id" class="sticker-tile" bindtap="addReplySticker" data-id="{{item.id}}" aria-label="添加表情包：{{item.label}}" disabled="{{replying}}">
+            <image mode="aspectFit" src="{{item.src}}" aria-hidden="true"/>
+          </button>
+        </view>
+      </view>
+      <text wx:elif="{{topic.locked}}" class="notice muted">此话题已锁定</text>
+    </view>
+  </block>
+</view>
+<view wx:if="{{documentPreview}}" class="document-layer">
+  <view class="document-mask" bindtap="closeFile"></view>
+  <view class="document" role="dialog" aria-label="附件预览">
+    <view class="row spread document-head"><text class="heading grow">{{documentPreview.name}}</text><button class="ghost compact" bindtap="closeFile">关闭</button></view>
+    <scroll-view scroll-y class="document-text" enhanced show-scrollbar="{{false}}"><text user-select>{{documentPreview.text}}</text></scroll-view>
+  </view>
+</view>

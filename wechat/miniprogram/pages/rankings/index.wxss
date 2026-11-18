@@ -1,0 +1,3 @@
+.rank { flex: none; width: 29px; height: 29px; display: grid; place-items: center; border-radius: 9px; background: #f5f0f2; color: #74636d; font-size: 13px; font-weight: 700; }
+.top-rank { background: #fae7eb; color: #ad263a; }
+.rank-score { flex: none; color: #63515c; font-size: 14px; font-weight: 650; }

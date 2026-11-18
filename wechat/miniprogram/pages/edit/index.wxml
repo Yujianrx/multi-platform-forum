@@ -1,0 +1,56 @@
+<view class="page stack editor-page">
+  <page-state wx:if="{{!ready}}" loading="{{!error}}" error="{{error}}" skeleton="rows" bind:retry="load"/>
+  <block wx:else>
+    <view class="editor-actions {{keyboardOpen ? 'keyboard-open' : ''}}">
+      <view class="row">
+        <button class="secondary grow" bindtap="save" data-submit="{{false}}" loading="{{operation === 'save'}}" disabled="{{busy}}">保存草稿</button>
+        <button class="primary grow" bindtap="save" data-submit="{{true}}" loading="{{operation === 'publish'}}" disabled="{{busy}}">发布内容</button>
+      </view>
+      <text class="notice error save-error" wx:if="{{saveError}}" aria-live="polite">{{saveError}}</text>
+    </view>
+    <view class="panel list">
+      <picker range="{{types}}" range-key="label" value="{{typeIndex}}" bindchange="selectType" disabled="{{existing || busy}}"><view class="list-item spread"><text>类型</text><text class="picker-value">{{types[typeIndex].label}}{{existing ? '' : ' ›'}}</text></view></picker>
+      <picker wx:if="{{type === 'discussion'}}" range="{{kinds}}" range-key="label" value="{{kindIndex}}" bindchange="selectKind" disabled="{{existing || busy}}"><view class="list-item spread"><text>话题类型</text><text class="picker-value">{{kinds[kindIndex].label}}{{existing ? '' : ' ›'}}</text></view></picker>
+      <picker range="{{categories}}" range-key="name" value="{{categoryIndex}}" bindchange="selectCategory" disabled="{{busy}}"><view class="list-item spread"><text>分类</text><text class="picker-value">{{categories[categoryIndex].name || '请选择'}} ›</text></view></picker>
+    </view>
+    <view class="panel stack">
+      <label id="draft-title">
+        <view class="row spread"><text class="field-label">标题</text><text class="meta">{{draft.title.length}}/120</text></view>
+        <input class="input {{titleError ? 'invalid' : ''}}" placeholder="填写标题" value="{{draft.title}}" maxlength="120" bindinput="input" bindblur="titleBlur" data-key="title" focus="{{focusTitle}}" disabled="{{busy}}"/>
+        <text wx:if="{{titleError}}" class="meta error list-meta" aria-live="polite">请填写标题</text>
+      </label>
+      <label><text class="field-label">摘要</text><textarea class="textarea summary-input" placeholder="填写摘要" value="{{draft.summary}}" maxlength="400" bindinput="input" data-key="summary" auto-height cursor-spacing="16" disabled="{{busy}}"/></label>
+      <label><text class="field-label">正文</text><textarea class="textarea body-input" placeholder="支持 Markdown" value="{{draft.body}}" maxlength="150000" bindinput="input" data-key="body" cursor-spacing="16" disabled="{{busy}}"/></label>
+      <view class="editor-tools {{type === 'discussion' ? 'two-tools' : ''}}">
+        <button class="compact" bindtap="addFile" data-use="body" loading="{{operation === 'body'}}" disabled="{{busy}}">插入图片</button>
+        <button class="compact" bindtap="addFile" data-use="attachment" loading="{{operation === 'attachment'}}" disabled="{{busy}}">上传附件</button>
+        <button wx:if="{{type !== 'discussion'}}" class="compact" bindtap="addFile" data-use="cover" loading="{{operation === 'cover'}}" disabled="{{busy}}">{{draft.coverId ? '替换封面' : '设置封面'}}</button>
+      </view>
+      <view wx:if="{{draft.coverId || attachmentFiles.length}}" class="uploaded">
+        <view class="list-item spread" wx:if="{{draft.coverId}}"><text>封面已设置</text><button class="ghost danger compact" bindtap="removeCover" disabled="{{busy}}">移除</button></view>
+        <view wx:for="{{attachmentFiles}}" wx:key="id" class="list-item"><text class="grow file-name">{{item.original_name}}</text><button class="ghost danger compact" bindtap="removeAttachment" data-id="{{item.id}}" disabled="{{busy}}">移除</button></view>
+      </view>
+    </view>
+    <view wx:if="{{fields.length}}" class="panel stack">
+      <label wx:for="{{fields}}" wx:key="key"><text class="field-label">{{item.label}}</text><textarea class="textarea" value="{{item.value}}" bindinput="inputField" data-key="{{item.key}}" data-index="{{index}}" maxlength="{{item.key === 'prompt' ? 100000 : 10000}}" auto-height cursor-spacing="16" disabled="{{busy}}"/></label>
+    </view>
+    <view class="panel stack editor-choices">
+      <text class="heading">可见范围</text>
+      <view class="audience-switch" role="radiogroup" aria-label="可见范围">
+        <view class="audience-option {{draft.visibility === 'company' ? 'selected' : ''}}" bindtap="visibility" hover-class="row-pressed" data-value="company" role="radio" aria-checked="{{draft.visibility === 'company'}}" aria-disabled="{{busy}}">公司内</view>
+        <view class="audience-option {{draft.visibility === 'departments' ? 'selected' : ''}}" bindtap="visibility" hover-class="row-pressed" data-value="departments" role="radio" aria-checked="{{draft.visibility === 'departments'}}" aria-disabled="{{busy}}">指定部门</view>
+      </view>
+      <view class="choice-chips" wx:if="{{draft.visibility === 'departments'}}" aria-label="选择部门">
+        <view wx:for="{{departments}}" wx:key="id" class="choice-chip {{selectedDepartments[item.id] ? 'selected' : ''}}" bindtap="toggleValue" hover-class="row-pressed" data-key="departments" data-value="{{item.id}}" role="checkbox" aria-checked="{{!!selectedDepartments[item.id]}}" aria-disabled="{{busy}}">{{item.name}}</view>
+        <text wx:if="{{!departments.length}}" class="muted">暂无可选部门</text>
+      </view>
+      <block wx:if="{{tags.length}}">
+        <text class="heading">标签</text>
+        <view class="choice-chips">
+          <view wx:for="{{tags}}" wx:key="id" class="choice-chip {{selectedTags[item.name] ? 'selected' : ''}}" bindtap="toggleValue" hover-class="row-pressed" data-key="tags" data-value="{{item.name}}" role="checkbox" aria-checked="{{!!selectedTags[item.name]}}" aria-disabled="{{busy}}">{{item.name}}</view>
+        </view>
+      </block>
+    </view>
+    <button wx:if="{{hasDraft}}" class="ghost danger" bindtap="discard" loading="{{operation === 'discard'}}" disabled="{{busy}}">删除草稿</button>
+  </block>
+</view>

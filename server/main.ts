@@ -14,6 +14,11 @@ if (production && !process.env.APP_ORIGIN?.startsWith('https://'))
 const dataDir = path.resolve(process.env.DATA_DIR || 'data');
 const db = await openDatabase(process.env.DATABASE_URL, path.join(dataDir, 'pg'));
 await migrate(db);
+const miniAppId = process.env.MINIPROGRAM_APP_ID;
+const miniBridgeSecret = process.env.MINIPROGRAM_BRIDGE_SECRET;
+if ((miniAppId || miniBridgeSecret) &&
+    (!/^wx[0-9a-f]{16}$/.test(miniAppId || '') || (miniBridgeSecret?.length || 0) < 32))
+  throw new Error('小程序 AppID 或云函数桥接密钥配置无效');
 const ctx: AppContext = {
   db,
   dataDir,
@@ -22,6 +27,7 @@ const ctx: AppContext = {
   provider: process.env.MODERATION_PROVIDER || 'none',
   clamHost: process.env.CLAMAV_HOST,
   clamPort: Number(process.env.CLAMAV_PORT || 3310),
+  miniprogram: miniAppId && miniBridgeSecret ? { appId: miniAppId, bridgeSecret: miniBridgeSecret } : undefined,
 };
 const provider = providerFor(ctx.provider, production),
   app = await buildApp(ctx, true);

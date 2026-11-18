@@ -27,6 +27,7 @@ import { manualReview } from './moderation.js';
 import { revokeUserApiKeys } from './api-keys.js';
 import { HttpError } from './core.js';
 import { syncContentHonors } from './honors-engine.js';
+import { phoneNumber } from './phone.js';
 const reviewInput = z.object({
   decision: z.enum(['approved', 'rejected']),
   reason: z.string().trim().max(2000).default(''),
@@ -70,7 +71,7 @@ export async function adminRoutes(app: FastifyInstance, ctx: AppContext) {
           .map((f) => 'u.' + f)
           .join(
             ',',
-          )},d.name department,(SELECT jsonb_agg(jsonb_build_object('departmentId',s.department_id,'categoryId',s.category_id)) FROM moderator_scopes s WHERE s.user_id=u.id) scopes FROM users u LEFT JOIN departments d ON u.department_id=d.id WHERE u.deleted_at IS NULL ORDER BY u.created_at DESC LIMIT $1 OFFSET $2`,
+          )},u.phone_e164,d.name department,(SELECT jsonb_agg(jsonb_build_object('departmentId',s.department_id,'categoryId',s.category_id)) FROM moderator_scopes s WHERE s.user_id=u.id) scopes FROM users u LEFT JOIN departments d ON u.department_id=d.id WHERE u.deleted_at IS NULL ORDER BY u.created_at DESC LIMIT $1 OFFSET $2`,
         [limit, (page - 1) * limit],
       ),
       total: (await db.query('SELECT count(*)::int total FROM users WHERE deleted_at IS NULL'))[0]
@@ -86,6 +87,7 @@ export async function adminRoutes(app: FastifyInstance, ctx: AppContext) {
         role: z.enum(['member', 'moderator', 'admin']),
         active: z.boolean(),
         moderationExempt: z.boolean().optional(),
+        phone: phoneNumber.nullable().optional(),
         scopes: z
           .array(
             z
@@ -123,6 +125,21 @@ export async function adminRoutes(app: FastifyInstance, ctx: AppContext) {
             enabled: p.moderationExempt,
           });
       }
+      if (p.phone !== undefined && p.phone !== u.phone_e164) {
+        try {
+          await tx.query('UPDATE users SET phone_e164=$1 WHERE id=$2', [p.phone, uid]);
+        } catch (error) {
+          if ((error as { code?: string }).code === '23505') fail(409, '该手机号已用于其他社区账号');
+          throw error;
+        }
+        const revoked = await tx.query(
+          "DELETE FROM mini_identities WHERE user_id=$1 AND binding_method='phone' RETURNING app_id",
+          [uid],
+        );
+        for (const binding of revoked)
+          await tx.query('DELETE FROM sessions WHERE user_id=$1 AND mini_app_id=$2', [uid, binding.app_id]);
+        await audit(tx, req.user.id, 'user.phone', uid, { configured: Boolean(p.phone) });
+      }
       await tx.query('DELETE FROM moderator_scopes WHERE user_id=$1', [uid]);
       if (p.role === 'moderator')
         for (const s of p.scopes)
@@ -130,10 +147,13 @@ export async function adminRoutes(app: FastifyInstance, ctx: AppContext) {
             'INSERT INTO moderator_scopes(id,user_id,department_id,category_id) VALUES($1,$2,$3,$4)',
             [id(), uid, s.departmentId, s.categoryId],
           );
-      if (!p.active || u.role !== p.role)
+      if (!p.active || u.role !== p.role) {
         await tx.query('DELETE FROM sessions WHERE user_id=$1', [uid]);
+        await tx.query('DELETE FROM mini_identities WHERE user_id=$1', [uid]);
+      }
       if (!p.active) await revokeUserApiKeys(tx, uid);
-      await audit(tx, req.user.id, 'user.update', uid, p);
+      const { phone: _phone, ...changes } = p;
+      await audit(tx, req.user.id, 'user.update', uid, changes);
     });
     return { ok: true };
   });
@@ -155,6 +175,7 @@ export async function adminRoutes(app: FastifyInstance, ctx: AppContext) {
         uid,
       ]);
       await tx.query('DELETE FROM sessions WHERE user_id=$1', [uid]);
+      await tx.query('DELETE FROM mini_identities WHERE user_id=$1', [uid]);
       await audit(tx, req.user.id, 'user.reset', uid);
       await revokeUserApiKeys(tx, uid);
     });
@@ -181,10 +202,11 @@ export async function adminRoutes(app: FastifyInstance, ctx: AppContext) {
       if (u.role === 'admin' && u.active && admins.length <= 1)
         fail(400, '必须保留至少一个有效管理员');
       await tx.query(
-        "UPDATE users SET deleted_at=now(),deleted_by=$2,active=false,moderation_exempt=false,name='已删除成员',bio='',avatar_version=NULL,password_hash=$3,must_reset=true WHERE id=$1",
+        "UPDATE users SET deleted_at=now(),deleted_by=$2,active=false,moderation_exempt=false,name='已删除成员',bio='',avatar_version=NULL,phone_e164=NULL,password_hash=$3,must_reset=true WHERE id=$1",
         [uid, req.user.id, invalidPassword],
       );
       await tx.query('DELETE FROM sessions WHERE user_id=$1', [uid]);
+      await tx.query('DELETE FROM mini_identities WHERE user_id=$1', [uid]);
       await revokeUserApiKeys(tx, uid);
       await tx.query('DELETE FROM password_resets WHERE user_id=$1', [uid]);
       await tx.query('DELETE FROM moderator_scopes WHERE user_id=$1', [uid]);

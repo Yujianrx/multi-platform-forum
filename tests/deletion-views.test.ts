@@ -173,8 +173,9 @@ test('013 升级到 014 保留旧账号、会话和规则，只迁移真实论�
     await migrate(upgrade);
     await migrate(upgrade);
     const after = await upgrade.query('SELECT * FROM users ORDER BY id');
-    expect(after.map(({ deleted_at, deleted_by, ...u }) => u)).toEqual(users);
+    expect(after.map(({ deleted_at, deleted_by, phone_e164, ...u }) => u)).toEqual(users);
     expect(after.every((u) => u.deleted_at === null)).toBe(true);
+    expect(after.every((u) => u.phone_e164 === null)).toBe(true);
     expect(await upgrade.query('SELECT * FROM moderation_rules ORDER BY id')).toEqual(rules);
     expect((await upgrade.query('SELECT count(*)::int n FROM sessions'))[0].n).toBe(1);
     expect(await upgrade.query('SELECT user_id,day::text AS day FROM content_view_events')).toEqual(

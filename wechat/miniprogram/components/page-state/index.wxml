@@ -1,0 +1,13 @@
+<view wx:if="{{loading && !hasItems && skeleton}}" class="skeleton {{skeleton}}" aria-label="正在加载">
+  <view wx:for="{{[1,2,3,4]}}" wx:key="*this" class="placeholder">
+    <view class="placeholder-cover"></view>
+    <view class="placeholder-line"></view>
+    <view class="placeholder-line short"></view>
+  </view>
+</view>
+<view wx:elif="{{loading}}" class="progress" aria-label="正在加载"><view class="spinner"></view><text>{{hasItems ? '正在加载更多' : '正在加载'}}</text></view>
+<view wx:elif="{{error}}" class="state" aria-live="polite">
+  <text class="message">{{error}}</text>
+  <button bindtap="retry">重试</button>
+</view>
+<view wx:elif="{{!hasItems && emptyText}}" class="state empty"><text>{{emptyText}}</text><slot></slot></view>
