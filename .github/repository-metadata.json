@@ -1,0 +1,30 @@
+{
+  "repository": "Yujianrx/-",
+  "description": "小鱼号 AI 共创社区｜企业内部经验分享、项目资源与论坛答疑，覆盖网页、手机网页和微信小程序；统一账号、内容审核、积分与勋章。",
+  "homepage": "https://ai.yujianrx.top",
+  "topics": [
+    "ai-community",
+    "internal-community",
+    "knowledge-sharing",
+    "forum",
+    "react",
+    "typescript",
+    "fastify",
+    "postgresql",
+    "mobile-web",
+    "wechat-miniprogram",
+    "cloudbase"
+  ],
+  "labels": [
+    { "name": "area:web", "color": "E72B3A", "description": "电脑网页与共享前端组件" },
+    { "name": "area:mobile", "color": "F48B97", "description": "手机网页布局、卡片与交互" },
+    { "name": "area:wechat", "color": "1A9C61", "description": "微信小程序、身份桥接与云函数" },
+    { "name": "area:backend", "color": "8250DF", "description": "服务端 API、账号权限、审核与数据库" },
+    { "name": "area:ops", "color": "9A6700", "description": "环境配置、备份、部署、回退与维护" },
+    { "name": "type:bug", "color": "D73A4A", "description": "修复现有功能异常或回归" },
+    { "name": "type:feature", "color": "0E8A16", "description": "新功能或现有功能扩展" },
+    { "name": "type:docs", "color": "0075CA", "description": "项目介绍、操作规范和维护记录" },
+    { "name": "type:test", "color": "D4C5F9", "description": "测试用例、验证脚本和验收证据" },
+    { "name": "type:deployment", "color": "FBCA04", "description": "网站或云函数部署、小程序上传与发布" }
+  ]
+}

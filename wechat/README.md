@@ -1,6 +1,25 @@
 # 小鱼号微信小程序
 
-在微信开发者工具导入本目录。这里使用截图工程的布局参考，原 TDesign 工程仍可独立打开。小程序原生页面在 `miniprogram/`，微信身份云函数在 `cloudfunctions/communityIdentity/`。
+在微信开发者工具导入本目录。小程序原生页面在 `miniprogram/`，微信身份云函数在 `cloudfunctions/communityIdentity/`；首页、讨论、个人页和发布流程沿用小鱼号手机网页的红白品牌与布局。
+
+[仓库首页](../README.md) · [开发与操作规范](../CONTRIBUTING.md) · [手机网页基准](../docs/MOBILE.md) · [维护与上线约束](../docs/MAINTENANCE.md)
+
+## 版本状态
+
+截至 2026-11-18，最近交接记录为 **0.2.0 开发版已上传，尚未提交审核**。现有 [微信接入回执](../docs/DEPLOYMENT-RECEIPT-20261117-WECHAT.md) 记录的是初次 0.1.0 开发版与网站 v10 接入，保留为历史验收证据，不改写成后续版本的发布结果。正式提审和发布状态需在微信公众平台确认并追加回执。
+
+## 代码入口
+
+| 位置 | 职责 |
+| --- | --- |
+| `miniprogram/pages/` | 首页、讨论、详情、发布、消息、个人页、榜单 |
+| `miniprogram/components/` | 内容卡片、加载与错误状态、私有图片、正文展示 |
+| `miniprogram/custom-tab-bar/` | 首页、讨论、发布、消息、我的五入口 |
+| `miniprogram/lib/api.js` | 云函数调用、登录状态与社区接口 |
+| `cloudfunctions/communityIdentity/` | 微信身份、手机号能力和服务端接口桥接 |
+| `../server/miniprogram.ts` | 账号绑定、小程序会话及服务端访问边界 |
+
+修改小程序使用 `area:wechat` 标签；同时改动共用服务端时加 `area:backend`，涉及云函数配置或上线时加 `type:deployment`。
 
 ## 登录与数据
 

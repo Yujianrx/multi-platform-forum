@@ -1,14 +1,16 @@
 # 维护与上线约束
 
-更新日期：2026-11-17。网站当前运行 `20261117-v10-wechat`。统一审核与手机交互沿用 v9，新增微信绑定和小程序 API。微信开发版与网站部署状态见 [小程序回执](DEPLOYMENT-RECEIPT-20261117-WECHAT.md)。此文件记录已确认的维护约束。
+更新日期：2026-11-18。最近网站部署回执为 `20261117-v10-wechat`。统一审核与手机交互沿用 v9，新增微信绑定和小程序 API。初次微信接入的实际验证见 [小程序回执](DEPLOYMENT-RECEIPT-20261117-WECHAT.md)，后续开发版状态见 [小程序说明](../wechat/README.md)。本次文档与标签更新不表示重新部署网站。
+
+仓库为 [Yujianrx/-](https://github.com/Yujianrx/-)，主分支 `main`。网页、手机网页、小程序和云函数按 [开发与操作规范](../CONTRIBUTING.md) 共同维护。仓库代码包含迁移 001–016，不能据此推断服务器已经全部执行；发布前读取实际迁移记录，保留历史 SQL 原字节。
 
 ## 发布基线和数据
 
 线上网站在 `/srv/ai-community/releases/20261117-v10-wechat`，基于 v9 增加微信接入。v9 的应用源码提交 `b47fce348812983f8514522622eecb5d31a29742` 来自本 `D:` 开发目录，统一审核与手机交互基线见 `docs/DEPLOYMENT-RECEIPT-20261117-REVIEW-MOBILE.md`。切回 v9 前先撤销小程序会话，详见小程序维护说明。
 
-服务器部署对话提供的基线：`https://ai.yujianrx.top`，`/srv/ai-community/releases/20261116-v5`，数据库已应用迁移 001–013，包括 012 账号免审和 013 积分荣誉。此前部署记录报告 121 项单元/集成测试、37 项浏览器测试、PostgreSQL 升级演练及 41 项线上 HTTPS 检查通过。该记录是部署侧提供的既有结果，不代替本轮部署验证。
+历史 v5 基线：`https://ai.yujianrx.top`，`/srv/ai-community/releases/20261116-v5`，当时数据库已应用迁移 001–013，包括 012 账号免审和 013 积分荣誉。当时报告 121 项单元/集成测试、37 项浏览器测试、PostgreSQL 升级演练及 41 项线上 HTTPS 检查通过。该记录只表示历史结果，不代替当前版本和验证。
 
-本地源码：`E:\Codex\Workspaces\2026-11-13\files-pasted-by-the-user-ai`。部署记录保存在另一工作区 `E:\Codex\Workspaces\2026-11-11\yujian-blog-security-20261111\outputs\AI社区-功能更新上线记录-20261116.txt` 和同目录的功能更新上线验证 JSON。
+当前源码以本仓库签出的提交为准。本机开发目录为 `D:\Backup\Documents\ChatGPT\小鱼号AI共创社区`；`E:\Codex\Workspaces\2026-11-13\files-pasted-by-the-user-ai` 是历史目录，不能拿旧目录覆盖新代码。历史部署证据保存在 `E:\Codex\Workspaces\2026-11-11\yujian-blog-security-20261111\outputs\`，跨机器维护以仓库中的实际部署回执为入口。
 
 - 后续数据库变化必须新增编号迁移，不能修改已应用的 SQL。
 - 保留线上账号、密码、会话、个人接口密钥、文章、评论、私有附件、审核规则和站点配置；仅管理员在产品中明确执行的目标删除改变相应数据。

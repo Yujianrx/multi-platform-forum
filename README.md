@@ -1,8 +1,12 @@
 # 小鱼号AI共创社区
 
-一个可本地运行、可自行部署的公司内部 AI 分享与讨论社区。经验、项目、技能包、提示词和独立论坛并行，既能沉淀成果，也能随时提问、讨论、反馈和闲聊。React + TypeScript 前端，Fastify 模块化单体服务，正式环境 PostgreSQL，开发环境使用文件持久化的 PGlite。没有接入外部 AI 推理或真实内容审核服务。
+面向公司内部的 AI 经验分享、项目资源与答疑社区，覆盖电脑网页、手机网页和微信小程序。三端共用账号、内容、部门权限、审核记录、积分和勋章，既能沉淀实用成果，也能发帖讨论、提问和反馈。
 
-## 快速开始
+网页采用 React + TypeScript，服务端采用 Fastify，生产数据库为 PostgreSQL，本地开发使用 PGlite。微信小程序通过微信云开发的身份云函数访问同一社区服务，不另建一套业务数据库。当前内容审核为规则检查与人工复核，没有接入外部 AI 推理或第三方语义审核服务。
+
+[访问社区](https://ai.yujianrx.top) · [开发与操作规范](CONTRIBUTING.md) · [部署维护](docs/MAINTENANCE.md) · [手机端](docs/MOBILE.md) · [微信小程序](wechat/README.md) · [问题与变更标签](https://github.com/Yujianrx/-/labels)
+
+## 三端与代码入口
 
 本仓库包含网页端、手机网页端、微信小程序及共用服务端：
 
@@ -16,9 +20,17 @@
 
 仓库只保存代码、品牌素材和配置示例。运行配置、密钥、用户数据库及私有附件不随代码上传；部署时保留服务器已有数据，云函数密钥通过环境变量配置。
 
+## 当前交付状态
+
+截至 2026-11-18，网站最近部署回执为 `20261117-v10-wechat`，网页和手机网页已上线。小程序最近交接记录为 **0.2.0 开发版已上传**，尚无正式发布回执；上传开发版、提交审核、审核通过和正式发布分别记录，以微信后台实际状态为准。
+
+仓库提交不等于服务器更新。代码包含迁移 001–016，实际服务器已执行的迁移以数据库和对应部署回执为准。2026-11-18 上传源码前，前后端类型检查、生产构建、141 项测试和 19 个小程序 JavaScript 文件语法检查通过；这是本地验证记录，不代表已配置自动 CI 或已完成全部微信真机验收。
+
+## 快速开始
+
 维护或部署更新前，请先阅读 [维护与上线约束](docs/MAINTENANCE.md)，保留已上线审核方式和真实数据。
 
-需要 Node.js 22.12+ 和 npm。首次运行按下列步骤初始化空开发库；已有数据库直接启动，不重复初始化。本轮手机布局开发目录只复制源码，原开发数据仍留在原目录。
+需要 Node.js 22.12+ 和 npm。首次运行按下列步骤初始化空开发库；已有数据库直接启动，不重复初始化。克隆仓库不会带入线上账号、文章或附件。
 
 ```bash
 npm ci
@@ -33,7 +45,7 @@ npm run dev
 
 打开 **http://127.0.0.1:3000**。随机初始密码与开发邀请码保存在 `outputs/本地访问说明.txt`，不写入源码。默认种子账号：admin、lin.xia、chen.yu、zhou.ning。内容与互动均为明确标注的开发示例；新增操作真实写入数据库。
 
-Windows 本地预览：双击 `outputs/打开社区预览.cmd`，或运行 `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/start-preview.ps1`。启动器会检查现有服务，必要时在后台启动并打开论坛；不会重置数据库。电脑重启后可再次运行。该入口使用本地开发数据库与开发审核模拟器，仅监听本机地址。
+Windows 本地预览可运行 `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/start-preview.ps1`。启动器会检查现有服务，必要时在后台启动并打开论坛；不会重置数据库。该入口使用本地开发数据库与开发审核模拟器，仅监听本机地址。`outputs/` 是本地输出，不随仓库分发。
 
 `npm run dev` 先编译服务端，再启动 API 和 Vite 前端开发服务。前端支持热更新；修改服务端需要重启命令。编译式入口兼容当前 Windows 受限环境，避免 tsx 调用系统用户信息时的兼容问题。
 
@@ -48,7 +60,13 @@ npm start
 
 这仍然是本地开发模式，不要将该启动方式暴露公网。正式生产设置 NODE_ENV=production、DATABASE_URL、HTTPS APP_ORIGIN，且不得使用 development 审核。
 
-## 首版功能
+### 微信小程序
+
+使用微信开发者工具导入 `wechat/`，按 [小程序说明](wechat/README.md) 配置 AppID、云环境和服务端桥接。小程序可用社区账号密码、邀请码注册或已绑定的微信身份登录；手机号登录需具备相应微信能力和账号手机号配置。共用网站实时数据，不复制生产账号到本地示例库。
+
+网页编辑器为所见即所得富文本，小程序当前为 Markdown 输入与富文本展示；小程序单附件上限为 700 KiB，后台审核、成员管理和 ZIP 下载在网页处理。
+
+## 社区功能
 
 - 手机端独立布局：760px 及以下使用最新/精选/榜单、双列内容流、单列讨论和底部五入口；电脑端保持原布局。手机组件在 `src/mobile/` 按需加载，复用既有编辑、审核、积分和账号流程。维护边界见 [手机端维护说明](docs/MOBILE.md)。
 
@@ -136,7 +154,7 @@ Logo 支持文字、Emoji 与 PNG/JPEG/WebP 图片；管理员上传后直接更
 
 | 配置                              | 行为                                         |
 | --------------------------------- | -------------------------------------------- |
-| `MODERATION_PROVIDER=none`        | 所有生产内容/评论待人工复核                  |
+| `MODERATION_PROVIDER=none`        | 普通账号内容/评论进入规则检查与人工复核；免审账号按现有开关发布，明确拒绝规则仍生效 |
 | `MODERATION_PROVIDER=development` | 仅开发模拟，production 拒绝启动              |
 | `CLAMAV_HOST` / `CLAMAV_PORT`     | 可选恶意文件扫描；普通账号未扫描文件随正文审核，免审账号直接可用，已检出恶意仍阻止 |
 
@@ -177,7 +195,7 @@ npm audit
 
 本地无示例数据时，可通过临时环境变量 `ADMIN_USERNAME`、`ADMIN_PASSWORD` 运行 `npm run admin:init`。密码 6–20 位，无需字母数字组合，不能全为空格；初始化后删除临时环境变量，已有管理员时拒绝重复初始化。
 
-容器部署使用 `node dist/server/cli.js admin`。完整流程、Caddy HTTPS、持久化卷、备份与恢复脚本见 [部署说明](docs/DEPLOYMENT.md)。需要提供服务器和域名信息后才能实际部署；当前未连接美国服务器，也未上线。
+容器部署使用 `node dist/server/cli.js admin`。[容器部署说明](docs/DEPLOYMENT.md) 适用于新建实例；维护现有网站必须沿用 [维护规范](docs/MAINTENANCE.md) 和最新实际部署回执，先备份数据库、私有附件与配置，在隔离副本验证后切换代码。不得将新建实例步骤直接用于重置已有生产环境。
 
 ## 代码结构
 
@@ -195,14 +213,24 @@ server/
   discovery.ts        搜索、筛选、轮播、榜单、通知列表
   social.ts           点赞、收藏、评论、回复、举报
   admin.ts            管理操作、配置、授权与日志
+  miniprogram.ts      微信绑定、小程序会话与受限接口
+  mini-markdown.ts    小程序正文展示转换
+  phone.ts            手机号规范化与账号关联
   cli.ts / seed.ts     安全初始化与隔离的开发数据
 src/
   pages/              首页、发现、发布、详情、个人与管理页面
+  mobile/             手机布局、双列卡片、底栏、下拉与双击刷新
   api.ts              请求、会话 CSRF、上传与异步状态
   components.tsx      卡片、头像、Markdown、表单、反馈
   styles.css          设计系统与响应式布局
 migrations/           SQL 迁移、约束和索引
 deploy/               HTTPS、备份恢复、生产环境示例
+wechat/
+  miniprogram/        微信原生页面、组件、底栏和品牌素材
+  cloudfunctions/     communityIdentity 身份与业务接口桥接
+.github/              仓库简介、标签配置和变更提交模板
+CONTRIBUTING.md       开发、验证、发布与标签使用规范
+AGENTS.md             自动化开发的项目约束
 ```
 
 技术选择依据：[Fastify Node 兼容说明](https://fastify.dev/docs/latest/Guides/Migration-Guide-V5/)、[PGlite 文件持久化](https://pglite.dev/docs/filesystems)。开发不要求 Docker 或独立 PostgreSQL；正式部署保持 PostgreSQL SQL/事务模型一致。
